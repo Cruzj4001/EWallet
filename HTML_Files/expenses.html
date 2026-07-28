@@ -59,6 +59,23 @@
                     <label for="expensesAmount">Amount:</label>
                     <input type="number" id="expensesAmount" name="amount" placeholder="0.00" step="0.01" min="0" required>
                 </div>
+                
+                
+                
+                <!-- Adding Expense frequency -->
+                
+				<div class="form-group">
+				    <label for="expensesFrequency">Frequency:</label>
+				    <select id="expensesFrequency" name="frequency" required>
+				        <option value="1">One Time / Yearly</option>
+				        <option value="12">Monthly</option>
+				        <option value="24">Twice Monthly</option>
+				        <option value="26">Biweekly</option>
+				        <option value="52">Weekly</option>
+				    </select>
+				</div>
+
+
 
                 <div class="form-group">
                     <label for="expensesCategory">Category:</label>

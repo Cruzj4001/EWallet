@@ -13,6 +13,24 @@ function escapeHTML(str) {
     }[m]));
 }
 
+
+// frequency label function
+
+function getFrequencyLabel(frequency) 
+{
+    const labels = 
+	{
+        1: 'One Time or Yearly',
+        12: 'Monthly',
+        24: 'Twice Monthly',
+        26: 'Biweekly',
+        52: 'Weekly'
+    };
+
+    return labels[Number(frequency)] || 'One Time or Yearly';
+}
+
+
 function updateIncomeDisplay() 
 {
     const display = document.getElementById('incomeDisplay');
@@ -34,7 +52,11 @@ function renderIncomeEntriesFromState() {
                 <td>${escapeHTML(i.date)}</td>
                 <td>${escapeHTML(i.source)}</td>
                 <td>$${(Number(i.amount) || 0).toFixed(2)}</td>
-                <td>${escapeHTML(i.notes)}</td>
+				
+				// add frequency
+				<td>${escapeHTML(getFrequencyLabel(i.frequency))}</td>
+				
+				<td>${escapeHTML(i.notes)}</td>
                 <td>
                     <button class="editBtn" data-id="${safeId}">Edit</button>
                     <button class="deleteBtn" data-id="${safeId}">Delete</button>
@@ -95,7 +117,11 @@ function initIncomePage()
             document.getElementById('incomeDate').value = target.date || '';
             document.getElementById('incomeSource').value = target.source || '';
             document.getElementById('incomeAmount').value = target.amount || '';
-            document.getElementById('incomeNotes').value = target.notes || '';
+            
+			// frequency element
+			document.getElementById('incomeFrequency').value = target.frequency || 1;
+			
+			document.getElementById('incomeNotes').value = target.notes || '';
             
             editTransactionId = target.id;
 
@@ -147,6 +173,11 @@ function initIncomePage()
         const amount = document.getElementById('incomeAmount').value;
         const notes = document.getElementById('incomeNotes').value;
 
+		// read frequency
+		
+		const frequency = parseInt(document.getElementById('incomeFrequency').value);
+		
+		
         if (!date || !source || !amount) {
             alert('Please complete date, source, and amount fields.');
             return false;
@@ -175,6 +206,7 @@ function initIncomePage()
                 date: date,
                 source: source,
                 amount: amountValue,
+				frequency: frequency,
                 notes: notes
             });
         }
