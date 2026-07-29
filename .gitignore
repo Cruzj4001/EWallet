@@ -1,0 +1,11 @@
+# Derby database
+EWalletDatabase/
+java-ewallet/EWalletDatabase/
+
+# Java compiled files
+*.class
+bin/
+java-ewallet/bin/
+
+# Eclipse workspace metadata
+.metadata/
