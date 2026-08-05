@@ -7,6 +7,25 @@ function escapeHTML(str) {
     }[m]));
 }
 
+
+// frequency helper
+
+function getFrequencyLabel(frequency) 
+{
+    const labels = 
+	{
+        1: 'One Time or Yearly',
+        12: 'Monthly',
+        24: 'Twice Monthly',
+        26: 'Biweekly',
+        52: 'Weekly'
+    };
+
+    return labels[Number(frequency)] || 'One Time or Yearly';
+}
+
+
+
 async function hashPassword(password) {
     const msgBuffer = new TextEncoder().encode(password);
     const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -184,7 +203,11 @@ function initExpensesFeature() {
         const date = document.getElementById('expensesDate').value;
         const source = document.getElementById('expensesSource').value;
         const amount = parseFloat(document.getElementById('expensesAmount').value) || 0;
-        const category = document.getElementById('expensesCategory').value;
+        
+		// expense frequency support
+		const frequency = parseInt(document.getElementById('expensesFrequency').value);
+		
+		const category = document.getElementById('expensesCategory').value;
         const notes = document.getElementById('expensesNotes').value;
         const editId = form.dataset.editId;
 
@@ -199,14 +222,14 @@ function initExpensesFeature() {
         if (editId) {
             const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'expense');
             if (idx !== -1) {
-                appState.transactions[idx] = { id: editId, type: 'expense', date, source, amount, category, notes };
+                appState.transactions[idx] = { id: editId, type: 'expense', date, source, amount, frequency, category, notes };
             }
             delete form.dataset.editId;
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) submitBtn.innerText = 'Add Expense';
         } else {
             const id = safeUUID(); 
-            appState.transactions.push({ id, type: 'expense', date, source, amount, category, notes });
+            appState.transactions.push({ id, type: 'expense', date, source, amount, frequency, category, notes });
         }
 
         appState.syncExpenses();
@@ -232,7 +255,11 @@ function initExpensesFeature() {
             document.getElementById('expensesDate').value = target.date;
             document.getElementById('expensesSource').value = target.source;
             document.getElementById('expensesAmount').value = target.amount;
-            document.getElementById('expensesCategory').value = target.category;
+            
+
+			document.getElementById('expensesFrequency').value = target.frequency || 1;
+			
+			document.getElementById('expensesCategory').value = target.category;
             document.getElementById('expensesNotes').value = target.notes;
 
             form.dataset.editId = id;
@@ -252,6 +279,7 @@ function initExpensesFeature() {
                     <td>${escapeHTML(e.source)}</td>
                     <td><span style="font-weight:bold; font-size:0.85em;">[${escapeHTML(e.category)}]</span></td>
                     <td>$${e.amount.toFixed(2)}</td>
+					<td>${escapeHTML(getFrequencyLabel(e.frequency))}</td>
                     <td>${escapeHTML(e.notes)}</td>
                     <td>
                         <button data-action="edit" data-id="${e.id}">Edit</button>
@@ -425,13 +453,13 @@ function initIncomeFeature() {
         if (editId) {
             const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'income');
             if (idx !== -1) {
-                appState.transactions[idx] = { id: editId, type: 'income', date, source, amount, notes };
+                appState.transactions[idx] = { id: editId, type: 'income', date, source, amount, frequency, notes };
             }
             delete form.dataset.editId;
             if (submitBtn) submitBtn.textContent = 'Add Income';
         } else {
             const id = crypto.randomUUID();
-            appState.transactions.push({ id, type: 'income', date, source, amount, notes });
+            appState.transactions.push({ id, type: 'income', date, source, amount, frequency, notes });
         }
 
         appState.syncExpenses();

@@ -4,9 +4,16 @@ if (typeof appState.loadExpenses === 'function') {
     appState.loadExpenses();
 }
 
-const totalAmountEl = document.getElementById('totalAmount') || document.querySelector('[id*="totalAmount"]');
-const incomeMonthEl = document.getElementById('incomeMonth') || document.querySelector('[id*="incomeMonth"]');
-const expensesMonthEl = document.getElementById('expensesMonth');
+const yearlyIncomeEl = document.getElementById('yearlyIncome');
+const yearlyExpensesEl = document.getElementById('yearlyExpenses');
+const yearlyLeftoverEl = document.getElementById('totalAmount');
+
+const monthlyIncomeEl = document.getElementById('monthlyIncome');
+const monthlyExpensesEl = document.getElementById('monthlyExpenses');
+const monthlyLeftoverEl = document.getElementById('monthlyLeftover');
+
+const incomeThisMonthEl = document.getElementById('incomeMonth');
+const expensesThisMonthEl = document.getElementById('expensesMonth');
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -15,11 +22,12 @@ function escapeHTML(str) {
     }[m]));
 }
 
-function updateDashboardMetricsDisplay() {
+/*function updateDashboardMetricsDisplay() {
     if (!appState.isLoggedIn) {
         window.location.href = 'index.html';
         return;
     }
+
 
     const totalTarget = document.getElementById('totalAmount');
     if (totalTarget) totalTarget.textContent = '$' + (Number(appState.balance) || 0).toFixed(2);
@@ -41,7 +49,76 @@ function updateDashboardMetricsDisplay() {
     if (totalAmountEl) totalAmountEl.textContent = '$' + (Number(appState.balance) || 0).toFixed(2);
     if (incomeMonthEl) incomeMonthEl.textContent = '$' + (Number(appState.income) || 0).toFixed(2);
     if (expensesMonthEl) expensesMonthEl.textContent = '$' + (Number(appState.expenses) || 0).toFixed(2);
+}*/
+
+// decided to just add my own function here without messing with theirs in a way that made sense to me
+
+function updateDashboardMetricsDisplay() {
+    if (!appState.isLoggedIn) {
+        window.location.href = 'index.html';
+        return;
+    }
+
+    if (yearlyIncomeEl) {
+        yearlyIncomeEl.textContent =
+            '$' + appState.getYearlyIncome().toFixed(2);
+    }
+
+    if (yearlyExpensesEl) {
+        yearlyExpensesEl.textContent =
+            '$' + appState.getYearlyExpenses().toFixed(2);
+    }
+
+    if (yearlyLeftoverEl) {
+        yearlyLeftoverEl.textContent =
+            '$' + appState.getYearlyLeftover().toFixed(2);
+    }
+
+    if (monthlyIncomeEl) {
+        monthlyIncomeEl.textContent =
+            '$' + appState.getMonthlyIncome().toFixed(2);
+    }
+
+    if (monthlyExpensesEl) {
+        monthlyExpensesEl.textContent =
+            '$' + appState.getMonthlyExpenses().toFixed(2);
+    }
+
+    if (monthlyLeftoverEl) {
+        monthlyLeftoverEl.textContent =
+            '$' + appState.getMonthlyLeftover().toFixed(2);
+    }
+
+    if (incomeThisMonthEl) {
+        incomeThisMonthEl.textContent =
+            '$' + appState.getIncomeThisMonth().toFixed(2);
+    }
+
+    if (expensesThisMonthEl) {
+        expensesThisMonthEl.textContent =
+            '$' + appState.getExpensesThisMonth().toFixed(2);
+    }
+
+    const usernameContainer =
+        document.querySelector('.username-text') ||
+        document.querySelector('h2');
+
+    if (
+        usernameContainer &&
+        appState.accountCreated &&
+        appState.username
+    ) {
+        const cleanName = escapeHTML(appState.username);
+
+        if (usernameContainer.innerHTML.includes('(Username)')) {
+            usernameContainer.innerHTML =
+                usernameContainer.innerHTML.replace('(Username)', cleanName);
+        } else {
+            usernameContainer.textContent = cleanName;
+        }
+    }
 }
+
 
 let pieChartInstance = null;
 
