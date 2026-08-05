@@ -31,11 +31,21 @@ function getFrequencyLabel(frequency)
 }
 
 
-function updateIncomeDisplay() 
+function updateIncomeDisplay()
 {
     const display = document.getElementById('incomeDisplay');
+
+    const yearlyIncome = appState.transactions
+        .filter(transaction => transaction.type === 'income')
+        .reduce((total, income) => {
+            const amount = Number(income.amount) || 0;
+            const frequency = Number(income.frequency) || 1;
+
+            return total + (amount * frequency);
+        }, 0);
+
     if (display) {
-        display.textContent = '$' + (Number(appState.balance) || 0).toFixed(2);
+        display.textContent = '$' + yearlyIncome.toFixed(2);
     }
 }
 
@@ -52,10 +62,7 @@ function renderIncomeEntriesFromState() {
                 <td>${escapeHTML(i.date)}</td>
                 <td>${escapeHTML(i.source)}</td>
                 <td>$${(Number(i.amount) || 0).toFixed(2)}</td>
-				
-				// add frequency
 				<td>${escapeHTML(getFrequencyLabel(i.frequency))}</td>
-				
 				<td>${escapeHTML(i.notes)}</td>
                 <td>
                     <button class="editBtn" data-id="${safeId}">Edit</button>

@@ -19,8 +19,9 @@
         </h2>
   
         <div id = "optionButtons">
-            <button id = "incomeButton" onclick = "window.location.href = 'income.html'"><h2>Income</h2></button>
             <button id = "mainPageButton" onclick = "window.location.href = '../index.html'"><h2>Main Page</h2></button>
+            <button id = "incomeButton" onclick = "window.location.href = 'income.html'"><h2>Income</h2></button>
+            <button id = "expenseButton" onclick = "window.location.href = '../HTML_Files/expenses.html'"><h2>Expenses</h2></button>
             <button id = "planningButton" onclick = "window.location.href = 'planning.html'"><h2>Planning</h2></button>
             <button id = "summaryButton" onclick = "window.location.href = 'financialSummary.html'"><h2>Summary</h2></button>
         </div>
@@ -35,12 +36,7 @@
 
             <div class="summary-container">
                 <div class="expense-sum">
-                    <p class="summary-label">Current Income:</p> 
-                    <h3 class="money-amount" id="totalAmountDisplay">$500.00</h3>
-                </div>
-
-                <div class="expense-sum">
-                    <p class="summary-label">Expenses For the Month:</p>
+                    <p class="summary-label">Expenses per Month:</p>
                     <h3 class="money-amount" id="monthAmountDisplay">$0.00</h3>
                 </div>
             </div>
@@ -80,9 +76,9 @@
                 <div class="form-group">
                     <label for="expensesCategory">Category:</label>
                     <select id="expensesCategory" name="category" required>
+                        <option value="General">General</option>
                         <option value="Tech">Tech</option>
                         <option value="Fun">Fun</option>
-                        <option value="General">General</option>
                     </select>
                 </div>
 

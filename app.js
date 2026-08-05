@@ -256,7 +256,7 @@ function initExpensesFeature() {
             document.getElementById('expensesSource').value = target.source;
             document.getElementById('expensesAmount').value = target.amount;
             
-			// add frequency choice
+
 			document.getElementById('expensesFrequency').value = target.frequency || 1;
 			
 			document.getElementById('expensesCategory').value = target.category;
