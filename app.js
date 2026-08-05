@@ -399,9 +399,14 @@ function renderPlanningUI() {
         .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
     const totalSaved = plans.reduce((sum, p) => sum + (parseFloat(p.savedAmount) || 0), 0);
     
-    const customGoalEl = document.getElementById('goalAmount');
-    const activeGoalTarget = customGoalEl ? (parseFloat(customGoalEl.value) || 0) : 0.00;
-    const remainingValue = Math.max(0, activeGoalTarget - totalSaved);
+    const remainingValue = Math.max(0, totalPlanned - totalSaved);
+	
+
+	const monthlyLeftover = appState.getMonthlyLeftover();
+	const monthsUntilGoal =
+	    monthlyLeftover > 0
+	        ? Math.ceil(remainingValue / monthlyLeftover)
+	        : null;
 
     tableBody.innerHTML = plans.map(p => {
         const safeId = escapeHTML(p.id);
@@ -430,6 +435,19 @@ function renderPlanningUI() {
         const el = document.getElementById(id);
         if (el) el.innerText = `$${val.toFixed(2)}`;
     });
+	
+	
+	// adding a display 
+	
+	const monthsDisplay = document.getElementById('monthsUntilGoalDisplay');
+
+	if (monthsDisplay) {
+	    monthsDisplay.innerText =
+	        monthsUntilGoal === null
+	            ? 'N/A'
+	            : `${monthsUntilGoal} month${monthsUntilGoal === 1 ? '' : 's'}`;
+	}
+	
 }
 
 }
