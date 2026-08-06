@@ -1,91 +1,156 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="UTF-8">
-    <link rel="icon" type="image/png" href="../Pictures/appLogo.png">
-    <link rel = "stylesheet" href = "../CSS_Files/styles.css">
-    <script src = "https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
-    <title>EWallet Financial Summary</title>
+<meta charset="UTF-8">
+<link rel="icon" type="image/png" href="../Pictures/appLogo.png">
+<link rel="stylesheet" href="../CSS_Files/styles.css">
+<script
+	src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
+<title>EWallet Financial Summary</title>
 </head>
 <body>
-    <a href="../index.html" class="app-logo-link" aria-label="Return to Main Page"></a>
-    <img src="../Pictures/appIcon.png" alt="EWallet Logo" class="app-logo-icon">
-    <div id = "intro">
-        <h1 class = "title">EWallet Financial Summary</h1>
 
-        <h2>
-            <img src = "../Pictures/usernameIcon.png" alt = "Username Icon" id = "usernameIcon">
-            <span class="username-text">(Username)</span>
-        </h2>
 
-        <div id = "optionButtons">
-            <button id = "incomeButton" onclick = "window.location.href = 'income.html'"><h2>Income</h2></button>
-            <button id = "expenseButton" onclick = "window.location.href = 'expenses.html'"><h2>Expenses</h2></button>
-            <button id = "planningButton" onclick = "window.location.href = 'planning.html'"><h2>Planning</h2></button>
-            <button id = "mainPageButton" onclick = "window.location.href = '../index.html'"><h2>Main Page</h2></button>
-        </div>
-    </div>
+	<div id="intro">
 
-    <section>
-        <h1 class = "title">Financial Summary</h1>
+		<div class="intro-top-row">
 
-        <img src = "../Pictures/PawPrints.png" alt = "Paw Prints" id = "pawPrints6">
-        <img src = "../Pictures/PawPrints.png" alt = "Paw Prints" id = "pawPrints7">
+			<a href="index.html" class="app-logo-link"
+				aria-label="Return to Main Page"></a> <img
+				src="../Pictures/appIcon.png" alt="EWallet Logo"
+				class="app-logo-icon">
 
-		<h2 class="title">Yearly Summary</h2>
-		
-		<div class="incomeSum">
-		    <p class="listName">Current Yearly Income:</p>
-		    <h3 class="moneyAmount" id="yearlyIncome">$0.00</h3>
+			<h1 class="title">EWallet Summary</h1>
+
+			<h2 class="intro-user">
+				<img src="../Pictures/usernameIcon.png" alt="Username Icon"
+					id="usernameIcon"> <span class="username-text">(Username)</span>
+			</h2>
+
 		</div>
-		
-		<div class="incomeSum">
-		    <p class="listName">Current Yearly Expenses:</p>
-		    <h3 class="moneyAmount" id="yearlyExpenses">$0.00</h3>
+
+		<div id="optionButtons">
+
+			<button id="mainPageButton"
+				onclick="window.location.href='index.html'">
+				<h2>Main Page</h2>
+			</button>
+
+			<button id="incomeButton"
+				onclick="window.location.href='income.html'">
+				<h2>Income</h2>
+			</button>
+
+			<button id="expenseButton"
+				onclick="window.location.href='expenses.html'">
+				<h2>Expenses</h2>
+			</button>
+
+			<button id="summaryButton"
+				onclick="window.location.href='financialSummary.html'">
+				<h2>Summary</h2>
+			</button>
+
+			<button id="planningButton"
+				onclick="window.location.href='planning.html'">
+				<h2>Planning</h2>
+			</button>
+
 		</div>
-		
-		<div class = "incomeSum">
-            <p class = "listName">Estimated Yearly Savings:</p> 
-            <h3 class = "moneyAmount" id = "totalAmount">$0.00</h3>
-        </div>
-		
-		<h2 class="title">Monthly Summary</h2>
-		
-		<div class="incomeSum">
-		    <p class="listName">Estimated Monthly Income:</p>
-		    <h3 class="moneyAmount" id="monthlyIncome">$0.00</h3>
+
+	</div>
+
+	<section>
+		<h1 class="title">Financial Summary</h1>
+
+		<img src="../Pictures/PawPrints.png" alt="Paw Prints" id="pawPrints6">
+		<img src="../Pictures/PawPrints.png" alt="Paw Prints" id="pawPrints7">
+
+		<div class="summary-overview-layout">
+
+			<section class="summary-overview-panel">
+				<h2 class="title">Yearly Summary</h2>
+
+				<div class="summary-card-grid yearly-summary-grid">
+
+					<div class="incomeSum">
+						<p class="listName">Current Yearly Income:</p>
+						<h3 class="moneyAmount" id="yearlyIncome">$0.00</h3>
+					</div>
+
+					<div class="incomeSum">
+						<p class="listName">Current Yearly Expenses:</p>
+						<h3 class="moneyAmount" id="yearlyExpenses">$0.00</h3>
+					</div>
+
+					<div class="incomeSum">
+						<p class="listName">Estimated Yearly Savings:</p>
+						<h3 class="moneyAmount" id="totalAmount">$0.00</h3>
+					</div>
+
+				</div>
+
+			</section>
+
+			<section class="summary-overview-panel">
+
+				<h2 class="title">Monthly Summary</h2>
+
+				<div class="summary-card-grid monthly-summary-grid">
+					<div class="incomeSum">
+						<p class="listName">Estimated Monthly Income:</p>
+						<h3 class="moneyAmount" id="monthlyIncome">$0.00</h3>
+					</div>
+
+					<div class="incomeSum">
+						<p class="listName">Estimated Monthly Expenses:</p>
+						<h3 class="moneyAmount" id="monthlyExpenses">$0.00</h3>
+					</div>
+
+					<div class="incomeSum">
+						<p class="listName">Income This Month:</p>
+						<h3 class="moneyAmount" id="incomeMonth">$0.00</h3>
+					</div>
+
+					<div class="incomeSum">
+						<p class="listName">Expenses This Month:</p>
+						<h3 class="moneyAmount" id="expensesMonth">$0.00</h3>
+					</div>
+
+					<div class="incomeSum">
+						<p class="listName">Estimated Monthly Leftover:</p>
+						<h3 class="moneyAmount" id="monthlyLeftover">$0.00</h3>
+					</div>
+
+				</div>
+			</section>
+
 		</div>
-		
-		<div class="incomeSum">
-		    <p class="listName">Estimated Monthly Expenses:</p>
-		    <h3 class="moneyAmount" id="monthlyExpenses">$0.00</h3>
-		</div>
-		
-		<div class = "incomeSum">
-            <p class = "listName">Income This Month:</p>
-            <h3 class = "moneyAmount" id = "incomeMonth">$0.00</h3>
-        </div>
-        
-        <div class = "incomeSum">
-            <p class = "listName">Expenses This Month:</p>
-            <h3 class = "moneyAmount" id = "expensesMonth">$0.00</h3>
-        </div>
-        
-        <div class="incomeSum">
-		    <p class="listName">Estimated Monthly Leftover:</p>
-		    <h3 class="moneyAmount" id="monthlyLeftover">$0.00</h3>
-		</div><br><br>
 
+		<section class="summary-chart-section">
 
-    </section>
+			<h1 class="title">Yearly Financial Breakdown</h1>
 
-    <section>
-        <h1 class = "title">Expense vs. Income Breakdown</h1>
-        <div id = "chartContainer" style = "width: 500px; height: 500px; margin: 0 auto;">
-            <canvas id = "pieChart"></canvas>
-        </div>
-    </section>
+			<div class="chart-layout">
 
-    <script type = "module" src = "../JS_Files/financialSummary.js"></script>
+				<div class="mascot-panel">
+					<img src="../Pictures/MrMoneyBarks.png" alt="Mr. MoneyBarks"
+						class="mascot-image">
+
+					<div class="mascot-message" aria-live="polite">
+						<p id="mascotMessage">"Let’s take a look at your financial
+							summary!"</p>
+					</div>
+				</div>
+
+				<div id="chartContainer" class="summary-chart-panel">
+					<canvas id="pieChart"></canvas>
+				</div>
+
+			</div>
+
+		</section>
+
+		<script type="module" src="../JS_Files/financialSummary.js"></script>
 </body>
 </html>
