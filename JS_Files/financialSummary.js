@@ -1,4 +1,4 @@
-import { appState } from '../variables.js';
+import { appState, loadAppState, saveAppState } from './variables.js';
 
 if (typeof appState.loadExpenses === 'function') {
     appState.loadExpenses();
@@ -127,9 +127,26 @@ function renderOrUpdateFinancialChart() {
     if (!chartCanvas || typeof Chart === 'undefined') return;
     const ctx = chartCanvas.getContext('2d');
 
-    const currentIncome = Math.max(0, Number(appState.income) || 0);
-    const currentExpenses = Math.max(0, Number(appState.expenses) || 0);
-    const currentBalance = Math.max(0, Number(appState.balance) || 0);
+    //const currentIncome = Math.max(0, Number(appState.income) || 0);
+    //const currentExpenses = Math.max(0, Number(appState.expenses) || 0);
+    //const currentBalance = Math.max(0, Number(appState.balance) || 0);
+
+    // replacing with updated summary calculations
+
+    const currentIncome = Math.max(
+        0,
+        Number(appState.getYearlyIncome()) || 0
+    );
+
+    const currentExpenses = Math.max(
+        0,
+        Number(appState.getYearlyExpenses()) || 0
+    );
+
+    const currentBalance = Math.max(
+        0,
+        Number(appState.getYearlyLeftover()) || 0
+    );
 
     if (pieChartInstance) {
         pieChartInstance.data.datasets[0].data = [currentIncome, currentExpenses, currentBalance];
@@ -138,7 +155,7 @@ function renderOrUpdateFinancialChart() {
         pieChartInstance = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['Income', 'Expenses', 'Balance'],
+                labels: ['Yearly Income', 'Yearly Expenses', 'Estimated Yearly Savings'],
                 datasets: [{
                     data: [currentIncome, currentExpenses, currentBalance],
                     backgroundColor: ['#4CAF50', '#F44336', '#2196F3'],
@@ -151,10 +168,13 @@ function renderOrUpdateFinancialChart() {
                 maintainAspectRatio: true,
                 plugins: {
                     legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { size: 14 },
-                            color: '#000000'
+                        position: 'right',
+                        labels:
+                        {
+                            font: { size: 16 },
+                            weight: 'bold',
+                            color: '#000000',
+                            padding: 20
                         }
                     },
                     tooltip: {

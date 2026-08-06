@@ -1,4 +1,4 @@
-import { appState } from '../variables.js';
+import { appState, loadAppState, saveAppState } from './variables.js';
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -464,9 +464,14 @@ function initIncomeFeature() {
         ev.preventDefault();
         const date = document.getElementById('incomeDate').value;
         const source = document.getElementById('incomeSource').value;
-        const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
-        const notes = document.getElementById('incomeNotes').value;
-        const editId = form.dataset.editId;
+		const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
+
+		const frequency =
+		    parseInt(document.getElementById('incomeFrequency').value, 10) || 1;
+
+		const notes = document.getElementById('incomeNotes').value;
+
+		const editId = form.dataset.editId;
 
         if (editId) {
             const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'income');

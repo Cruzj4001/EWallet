@@ -8,41 +8,58 @@
 <title>EWallet Planning</title>
 </head>
 <body>
-	<a href="../index.html" class="app-logo-link"
-		aria-label="Return to Main Page"></a>
-	<img src="../Pictures/appIcon.png" alt="EWallet Logo"
-		class="app-logo-icon">
-	<header id="intro">
-		<h1 class="title">EWallet Planning</h1>
+	<div id="intro">
 
-		<h2>
-			<img src="../Pictures/usernameIcon.png" alt="Username Icon"
-				id="usernameIcon"> (Username)
-		</h2>
+		<div class="intro-top-row">
+
+			<a href="index.html" class="app-logo-link"
+				aria-label="Return to Main Page"></a> <img
+				src="../Pictures/appIcon.png" alt="EWallet Logo"
+				class="app-logo-icon">
+
+			<h1 class="title">EWallet Planning</h1>
+
+			<h2 class="intro-user">
+				<img src="../Pictures/usernameIcon.png" alt="Username Icon"
+					id="usernameIcon"> <span class="username-text">(Username)</span>
+			</h2>
+
+		</div>
 
 		<div id="optionButtons">
-			<button id="incomeButton"
-				onclick="window.location.href = 'income.html'">
-				<h2>Income</h2>
-			</button>
-			<button id="expenseButton"
-				onclick="window.location.href = 'expenses.html'">
-				<h2>Expenses</h2>
-			</button>
+
 			<button id="mainPageButton"
-				onclick="window.location.href = '../index.html'">
+				onclick="window.location.href='index.html'">
 				<h2>Main Page</h2>
 			</button>
+
+			<button id="incomeButton"
+				onclick="window.location.href='income.html'">
+				<h2>Income</h2>
+			</button>
+
+			<button id="expenseButton"
+				onclick="window.location.href='expenses.html'">
+				<h2>Expenses</h2>
+			</button>
+
 			<button id="summaryButton"
-				onclick="window.location.href = 'financialSummary.html'">
+				onclick="window.location.href='financialSummary.html'">
 				<h2>Summary</h2>
 			</button>
+
+			<button id="planningButton"
+				onclick="window.location.href='planning.html'">
+				<h2>Planning</h2>
+			</button>
+
 		</div>
-	</header>
+
+	</div>
 
 	<main>
 		<section id="planningSummary" aria-labelledby="planningHeading">
-			<h2 class="title" id="planningHeading">Planning</h2>
+			<h2 class="title" id="planningHeading">Planning Summary</h2>
 
 			<img src="../Pictures/PawPrints.png" alt="" role="presentation"
 				id="pawPrints6"> <img src="../Pictures/PawPrints.png" alt=""
@@ -74,7 +91,7 @@
 				<h3 class="money-amount" id="monthPlanningAmountDisplay">$0.00</h3>
 			</div>
 			-->
-			
+
 			<div class="planning-box">
 				<p class="summary-label">Remaining Until Goal:</p>
 				<h3 class="money-amount" id="remainingTillGoalDisplay">$0.00</h3>
@@ -142,6 +159,6 @@
 		</section>
 	</main>
 
-	<script type="module" src="../app.js"></script>
+	<script type="module" src="../JS_Files/app.js"></script>
 </body>
 </html>
