@@ -1,156 +1,580 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-<meta charset="UTF-8">
-<link rel="icon" type="image/png" href="../Pictures/appLogo.png">
-<link rel="stylesheet" href="../CSS_Files/styles.css">
-<script
-	src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
-<title>EWallet Financial Summary</title>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="../Pictures/appLogo.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../CSS_Files/styles.css"
+    >
+
+    <!-- Chart.js for financial pie chart -->
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js">
+    </script>
+
+    <title>EWallet Financial Summary</title>
+
 </head>
+
+
 <body>
 
 
-	<div id="intro">
+    <!-- ========================================= -->
+    <!-- HEADER -->
+    <!-- ========================================= -->
 
-		<div class="intro-top-row">
+    <div id="intro">
 
-			<a href="index.html" class="app-logo-link"
-				aria-label="Return to Main Page"></a> <img
-				src="../Pictures/appIcon.png" alt="EWallet Logo"
-				class="app-logo-icon">
+        <div class="intro-top-row">
 
-			<h1 class="title">EWallet Summary</h1>
+            <a
+                href="../index.html"
+                class="app-logo-link"
+                aria-label="Return to Main Page">
+            </a>
 
-			<h2 class="intro-user">
-				<img src="../Pictures/usernameIcon.png" alt="Username Icon"
-					id="usernameIcon"> <span class="username-text">(Username)</span>
-			</h2>
+            <img
+                src="../Pictures/appIcon.png"
+                alt="EWallet Logo"
+                class="app-logo-icon"
+            >
 
-		</div>
+            <h1 class="title">
+                EWallet Summary
+            </h1>
 
-		<div id="optionButtons">
+            <h2 class="intro-user">
 
-			<button id="mainPageButton"
-				onclick="window.location.href='index.html'">
-				<h2>Main Page</h2>
-			</button>
+                <img
+                    src="../Pictures/usernameIcon.png"
+                    alt="Username Icon"
+                    id="usernameIcon"
+                >
 
-			<button id="incomeButton"
-				onclick="window.location.href='income.html'">
-				<h2>Income</h2>
-			</button>
+                <span class="username-text">
+                    (Username)
+                </span>
 
-			<button id="expenseButton"
-				onclick="window.location.href='expenses.html'">
-				<h2>Expenses</h2>
-			</button>
+            </h2>
 
-			<button id="summaryButton"
-				onclick="window.location.href='financialSummary.html'">
-				<h2>Summary</h2>
-			</button>
+        </div>
 
-			<button id="planningButton"
-				onclick="window.location.href='planning.html'">
-				<h2>Planning</h2>
-			</button>
 
-		</div>
+        <!-- ========================================= -->
+        <!-- NAVIGATION -->
+        <!-- ========================================= -->
 
-	</div>
+        <div id="optionButtons">
 
-	<section>
-		<h1 class="title">Financial Summary</h1>
+            <button
+                id="mainPageButton"
+                type="button"
+                onclick="window.location.href='../index.html'">
 
-		<img src="../Pictures/PawPrints.png" alt="Paw Prints" id="pawPrints6">
-		<img src="../Pictures/PawPrints.png" alt="Paw Prints" id="pawPrints7">
+                <h2>Main Page</h2>
 
-		<div class="summary-overview-layout">
+            </button>
 
-			<section class="summary-overview-panel">
-				<h2 class="title">Yearly Summary</h2>
 
-				<div class="summary-card-grid yearly-summary-grid">
+            <button
+                id="incomeButton"
+                type="button"
+                onclick="window.location.href='income.html'">
 
-					<div class="incomeSum">
-						<p class="listName">Current Yearly Income:</p>
-						<h3 class="moneyAmount" id="yearlyIncome">$0.00</h3>
-					</div>
+                <h2>Income</h2>
 
-					<div class="incomeSum">
-						<p class="listName">Current Yearly Expenses:</p>
-						<h3 class="moneyAmount" id="yearlyExpenses">$0.00</h3>
-					</div>
+            </button>
 
-					<div class="incomeSum">
-						<p class="listName">Estimated Yearly Savings:</p>
-						<h3 class="moneyAmount" id="totalAmount">$0.00</h3>
-					</div>
 
-				</div>
+            <button
+                id="expenseButton"
+                type="button"
+                onclick="window.location.href='expenses.html'">
 
-			</section>
+                <h2>Expenses</h2>
 
-			<section class="summary-overview-panel">
+            </button>
 
-				<h2 class="title">Monthly Summary</h2>
 
-				<div class="summary-card-grid monthly-summary-grid">
-					<div class="incomeSum">
-						<p class="listName">Estimated Monthly Income:</p>
-						<h3 class="moneyAmount" id="monthlyIncome">$0.00</h3>
-					</div>
+            <button
+                id="summaryButton"
+                type="button"
+                onclick="window.location.href='financialSummary.html'">
 
-					<div class="incomeSum">
-						<p class="listName">Estimated Monthly Expenses:</p>
-						<h3 class="moneyAmount" id="monthlyExpenses">$0.00</h3>
-					</div>
+                <h2>Summary</h2>
 
-					<div class="incomeSum">
-						<p class="listName">Income This Month:</p>
-						<h3 class="moneyAmount" id="incomeMonth">$0.00</h3>
-					</div>
+            </button>
 
-					<div class="incomeSum">
-						<p class="listName">Expenses This Month:</p>
-						<h3 class="moneyAmount" id="expensesMonth">$0.00</h3>
-					</div>
 
-					<div class="incomeSum">
-						<p class="listName">Estimated Monthly Leftover:</p>
-						<h3 class="moneyAmount" id="monthlyLeftover">$0.00</h3>
-					</div>
+            <button
+                id="planningButton"
+                type="button"
+                onclick="window.location.href='planning.html'">
 
-				</div>
-			</section>
+                <h2>Planning</h2>
 
-		</div>
+            </button>
 
-		<section class="summary-chart-section">
+        </div>
 
-			<h1 class="title">Yearly Financial Breakdown</h1>
+    </div>
 
-			<div class="chart-layout">
 
-				<div class="mascot-panel">
-					<img src="../Pictures/MrMoneyBarks.png" alt="Mr. MoneyBarks"
-						class="mascot-image">
+    <!-- ========================================= -->
+    <!-- FINANCIAL SUMMARY -->
+    <!-- ========================================= -->
 
-					<div class="mascot-message" aria-live="polite">
-						<p id="mascotMessage">"Let’s take a look at your financial
-							summary!"</p>
-					</div>
-				</div>
+    <section>
 
-				<div id="chartContainer" class="summary-chart-panel">
-					<canvas id="pieChart"></canvas>
-				</div>
+        <h1 class="title">
+            Financial Summary
+        </h1>
 
-			</div>
 
-		</section>
+        <img
+            src="../Pictures/PawPrints.png"
+            alt="Paw Prints"
+            id="pawPrints6"
+        >
 
-		<script type="module" src="../JS_Files/financialSummary.js"></script>
+        <img
+            src="../Pictures/PawPrints.png"
+            alt="Paw Prints"
+            id="pawPrints7"
+        >
+
+
+        <div class="summary-overview-layout">
+
+
+            <!-- ========================================= -->
+            <!-- YEARLY SUMMARY -->
+            <!-- ========================================= -->
+
+            <section class="summary-overview-panel">
+
+                <h2 class="title">
+                    Yearly Summary
+                </h2>
+
+
+                <div class="summary-card-grid yearly-summary-grid">
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Current Yearly Income:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="yearlyIncome">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Current Yearly Expenses:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="yearlyExpenses">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Estimated Yearly Savings:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="totalAmount">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+
+            <!-- ========================================= -->
+            <!-- MONTHLY SUMMARY -->
+            <!-- ========================================= -->
+
+            <section class="summary-overview-panel">
+
+                <h2 class="title">
+                    Monthly Summary
+                </h2>
+
+
+                <div class="summary-card-grid monthly-summary-grid">
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Estimated Monthly Income:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="monthlyIncome">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Estimated Monthly Expenses:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="monthlyExpenses">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Income This Month:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="incomeMonth">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Expenses This Month:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="expensesMonth">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                    <div class="incomeSum">
+
+                        <p class="listName">
+                            Estimated Monthly Leftover:
+                        </p>
+
+                        <h3
+                            class="moneyAmount"
+                            id="monthlyLeftover">
+
+                            $0.00
+
+                        </h3>
+
+                    </div>
+
+
+                </div>
+
+            </section>
+
+        </div>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- FINANCIAL CHART -->
+    <!-- ========================================= -->
+
+    <section class="summary-chart-section">
+
+        <h1 class="title">
+            Yearly Financial Breakdown
+        </h1>
+
+
+        <div class="chart-layout">
+
+
+            <div class="mascot-panel">
+
+                <img
+                    src="../Pictures/MrMoneyBarks.png"
+                    alt="Mr. MoneyBarks"
+                    class="mascot-image"
+                >
+
+
+                <div
+                    class="mascot-message"
+                    aria-live="polite">
+
+                    <p id="mascotMessage">
+                        "Let’s take a look at your financial summary!"
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="chartContainer"
+                class="summary-chart-panel">
+
+                <canvas id="pieChart"></canvas>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- REPORTS & DATA -->
+    <!-- ========================================= -->
+
+    <section id="reportTools">
+
+        <h2 class="title">
+            Reports & Data
+        </h2>
+
+
+        <div class="report-tools-container">
+
+
+            <!-- ========================================= -->
+            <!-- FINANCIAL REPORTS -->
+            <!-- ========================================= -->
+
+            <div class="report-tool-card">
+
+                <h3>
+                    Financial Reports
+                </h3>
+
+
+                <div class="report-button-group">
+
+                    <button
+                        id="incomeReportBtn"
+                        type="button">
+
+                        View Income Report
+
+                    </button>
+
+
+                    <button
+                        id="expenseReportBtn"
+                        type="button">
+
+                        View Expense Report
+
+                    </button>
+
+
+                    <button
+                        id="fullReportBtn"
+                        type="button">
+
+                        View Full Financial Report
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- CSV EXPORT -->
+            <!-- ========================================= -->
+
+            <div class="report-tool-card">
+
+                <h3>
+                    Export Data
+                </h3>
+
+
+                <div class="report-button-group">
+
+                    <button
+                        id="exportIncomeBtn"
+                        type="button">
+
+                        Export Income CSV
+
+                    </button>
+
+
+                    <button
+                        id="exportExpenseBtn"
+                        type="button">
+
+                        Export Expense CSV
+
+                    </button>
+
+
+                    <button
+                        id="exportFullBtn"
+                        type="button">
+
+                        Export Full Report CSV
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- CSV IMPORT -->
+            <!-- ========================================= -->
+
+            <div class="report-tool-card">
+
+                <h3>
+                    Import Data
+                </h3>
+
+
+                <div class="import-row">
+
+                    <label for="incomeCsvInput">
+                        Income CSV:
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="incomeCsvInput"
+                        accept=".csv"
+                    >
+
+
+                    <button
+                        id="importIncomeBtn"
+                        type="button">
+
+                        Import Income
+
+                    </button>
+
+                </div>
+
+
+                <div class="import-row">
+
+                    <label for="expenseCsvInput">
+                        Expense CSV:
+                    </label>
+
+
+                    <input
+                        type="file"
+                        id="expenseCsvInput"
+                        accept=".csv"
+                    >
+
+
+                    <button
+                        id="importExpenseBtn"
+                        type="button">
+
+                        Import Expenses
+
+                    </button>
+
+                </div>
+
+            </div>
+
+
+        </div>
+
+
+        <!-- Reports display here -->
+
+        <div id="reportOutput"></div>
+
+    </section>
+
+
+    <!-- ========================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================= -->
+
+    <script
+        type="module"
+        src="../JS_Files/financialSummary.js">
+    </script>
+
+
 </body>
+
 </html>
