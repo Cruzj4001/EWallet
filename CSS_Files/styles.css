@@ -20,34 +20,36 @@ body {
 }
 
 /* EWALLET Logo Styling */
+
 .title {
     position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     width: 100%;
-    padding: 12px 20px;
+    padding: 10px 20px;
     text-align: center;
     font-family: "Lucida Console", Monaco, monospace;
     font-size: 24px;
     letter-spacing: 0.5px;
-    color: #F7F5F0; 
-    background-color: #525B76;  
+    color: #F7F5F0;
+    background-color: #525B76;
     border-radius: 6px;
-    box-shadow: 0 2px 8px rgba(82, 91, 118, 0.15);
 }
 
 #intro {
-    margin-top: 40px !important; 
+    margin-top: 18px !important;
     position: relative !important;
+    padding-left: 80px;
+    padding-top: 12px;
 }
 
 .app-logo-link {
     position: absolute !important; 
-    left: 20px !important;         
-    top: 25px !important;         
-    width: 48px !important;      
-    height: 48px !important;
+    left: 28px !important;
+    top: 1px !important;
+    width: 68px !important;
+    height: 68px !important;
     z-index: 9999 !important;     
     display: inline-block !important;
     text-decoration: none !important;
@@ -55,10 +57,11 @@ body {
 
 .app-logo-icon {
     position: absolute !important; 
-    left: 10px !important;         
-    top: 10px !important;         
-    width: 68px !important;      
+    left: 28px !important;
+    top: 1px !important;
+    width: 68px !important;
     height: 68px !important;
+    z-index: 10000 !important;
     object-fit: cover !important;   
     border-radius: 50% !important;  
     border: 2px solid #525B76 !important; 
@@ -89,7 +92,7 @@ p {
 }
 
 .moneyAmount, .money-amount {
-    font-size: 28px; 
+    font-size: clamp(10px, 1.5vw, 28px); 
     font-weight: bold;
     margin: 0; 
     color: #2B2B2B;
@@ -458,4 +461,236 @@ table td button {
     .import-row button {
         width: 100%;
     }
+    
+	}
+
+.summary-card-grid {
+    display: grid;
+    gap: 20px;
+    width: min(1100px, 92%);
+    margin: 24px auto 40px;
+}
+
+.yearly-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.monthly-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.summary-card-grid .incomeSum {
+    width: auto;
+    max-width: none;
+    margin: 0;
+    min-height: 120px;
+    box-sizing: border-box;
+}
+
+@media (max-width: 850px) {
+    .yearly-summary-grid,
+    .monthly-summary-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.summary-chart-section {
+    width: min(1100px, 92%);
+    margin: 0 auto 48px;
+}
+
+.summary-chart-panel {
+    width: 100%;
+    min-height: 420px;
+    padding: 28px;
+    box-sizing: border-box;
+    background-color: #F7F5F0;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(20, 35, 60, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.summary-chart-panel canvas {
+    max-width: 500px;
+    max-height: 500px;
+}
+
+.summary-overview-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.4fr;
+    gap: 24px;
+    width: min(1400px, 94%);
+    margin: 32px auto 48px;
+    align-items: start;
+}
+
+.summary-overview-panel {
+    background-color: rgba(247, 245, 240, 0.78);
+    border: 1px solid rgba(82, 91, 118, 0.18);
+    border-radius: 18px;
+    padding: 22px;
+    box-sizing: border-box;
+    box-shadow: 0 6px 20px rgba(20, 35, 60, 0.08);
+}
+
+.summary-overview-panel > .title {
+    margin: 0 0 20px;
+}
+
+.summary-overview-panel .summary-card-grid {
+    width: 100%;
+    margin: 0;
+}
+
+.summary-overview-panel .yearly-summary-grid {
+    grid-template-columns: 1fr;
+}
+
+.summary-overview-panel .monthly-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 1000px) {
+    .summary-overview-layout {
+        grid-template-columns: 1fr;
+    }
+}
+
+.monthly-summary-grid .incomeSum:last-child {
+    grid-column: 2;
+}
+
+@media (max-width: 850px) {
+    .monthly-summary-grid .incomeSum:last-child {
+        grid-column: auto;
+    }
+}
+
+
+/* Shared header layout: existing logo, title, username, and menu */
+.intro-top-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 24px;
+}
+
+.intro-top-row > .title {
+    width: 100%;
+    margin: 0;
+    justify-content: flex-start;
+    padding-left: 50px;
+    text-align: center;
+
+    background: linear-gradient(
+        to right,
+        #525B76 0%,
+        #525B76 0.25%,
+        #525B76 5%,
+        #525B76 65%,
+        rgba(82, 91, 118, 0) 100%
+    );
+}
+
+.intro-user {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    white-space: nowrap;
+}
+
+#intro #optionButtons {
+    width: 100%;
+    padding: 8px;
+    gap: 8px;
+    background-color: rgba(247, 245, 240, 0.72);
+    border: 1px solid rgba(82, 91, 118, 0.18);
+    border-radius: 8px;
+    
+    display: flex;
+}
+
+#intro #optionButtons button {
+	flex: 1;
+    padding: 10px 18px;
+    min-height: 46px;
+}
+
+#intro #optionButtons button h2 {
+    margin: 0;
+    font-size: 16px;
+}
+
+@media (max-width: 850px) {
+    #intro {
+        padding-left: 0;
+        margin-top: 92px !important;
+    }
+
+    .intro-top-row {
+        grid-template-columns: 1fr;
+    }
+
+    .intro-user {
+        justify-content: flex-start;
+    }
+}
+
+.chart-layout {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 30px;
+    align-items: center;
+}
+
+.mascot-panel {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: none;
+}
+
+.mascot-image {
+    width: 100%;
+    max-width: 300px;
+    max-height: 500px;
+    height: 100%;
+    z-grade: 10000;
+}
+
+.summary-chart-panel {
+    width: 750px;
+    height: 750px;
+    background: none;
+    box-shadow: none;
+}
+
+.mascot-panel {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+}
+
+.mascot-message {
+    width: 100%;
+    max-width: 300px;
+    padding: 15px 15px;
+    background-color: rgba(247, 245, 240, 0.9);
+    border-left: 5px solid #7D928B;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.mascot-message p {
+    margin: 0;
+    color: #525B76;
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.5;
+    text-align: center;
 }
