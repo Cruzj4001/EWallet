@@ -36,15 +36,29 @@ public class FinancialReport {
 
         report.append(
             String.format(
-                "Total Income:          $%.2f%n",
+                "Yearly Income:          $%.2f%n",
                 totalIncome
             )
         );
 
         report.append(
             String.format(
-                "Total Expenses:        $%.2f%n",
+                "Yearly Expenses:        $%.2f%n",
                 totalExpenses
+            )
+        );
+
+        report.append(
+            String.format(
+                "Monthly Income:         $%.2f%n",
+                totalIncome / 12.0
+            )
+        );
+
+        report.append(
+            String.format(
+                "Monthly Expenses:       $%.2f%n",
+                totalExpenses / 12.0
             )
         );
 
@@ -52,7 +66,7 @@ public class FinancialReport {
 
             report.append(
                 String.format(
-                    "Total Savings:         $%.2f%n",
+                    "Estimated Savings:     $%.2f%n",
                     balance
                 )
             );
@@ -69,18 +83,18 @@ public class FinancialReport {
 
         report.append(
             String.format(
-                "Saved Toward Plans:    $%.2f%n",
+                "Saved Toward Plans:     $%.2f%n",
                 totalSaved
             )
         );
-
-        report.append("\n");
 
         IncomeReport incomeReport =
                 new IncomeReport();
 
         ExpenseReport expenseReport =
                 new ExpenseReport();
+
+        report.append("\n\n");
 
         report.append(
             incomeReport.generateReport(userID)

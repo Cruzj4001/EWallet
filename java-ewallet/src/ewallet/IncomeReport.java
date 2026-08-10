@@ -47,6 +47,19 @@ public class IncomeReport {
                     )
                 );
 
+                report.append("Frequency: ")
+                      .append(getFrequencyLabel(
+                          income.getFrequency()
+                      ))
+                      .append("\n");
+
+                report.append(
+                    String.format(
+                        "Yearly Equivalent: $%.2f%n",
+                        income.getYearlyAmount()
+                    )
+                );
+
                 report.append("Notes: ")
                       .append(income.getNotes())
                       .append("\n");
@@ -61,11 +74,22 @@ public class IncomeReport {
 
         report.append(
             String.format(
-                "Total Income: $%.2f%n",
+                "Total Yearly Income: $%.2f%n",
                 totalIncome
             )
         );
 
         return report.toString();
+    }
+
+    private String getFrequencyLabel(int frequency) {
+
+        return switch (frequency) {
+            case 12 -> "Monthly";
+            case 24 -> "Twice Monthly";
+            case 26 -> "Biweekly";
+            case 52 -> "Weekly";
+            default -> "One Time or Yearly";
+        };
     }
 }

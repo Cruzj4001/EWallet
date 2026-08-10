@@ -51,6 +51,19 @@ public class ExpenseReport {
                     )
                 );
 
+                report.append("Frequency: ")
+                      .append(getFrequencyLabel(
+                          expense.getFrequency()
+                      ))
+                      .append("\n");
+
+                report.append(
+                    String.format(
+                        "Yearly Equivalent: $%.2f%n",
+                        expense.getYearlyAmount()
+                    )
+                );
+
                 report.append("Notes: ")
                       .append(expense.getNotes())
                       .append("\n");
@@ -65,11 +78,22 @@ public class ExpenseReport {
 
         report.append(
             String.format(
-                "Total Expenses: $%.2f%n",
+                "Total Yearly Expenses: $%.2f%n",
                 totalExpenses
             )
         );
 
         return report.toString();
+    }
+
+    private String getFrequencyLabel(int frequency) {
+
+        return switch (frequency) {
+            case 12 -> "Monthly";
+            case 24 -> "Twice Monthly";
+            case 26 -> "Biweekly";
+            case 52 -> "Weekly";
+            default -> "One Time or Yearly";
+        };
     }
 }

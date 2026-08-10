@@ -60,16 +60,18 @@ public class CreateTables {
 
         try {
 
-            stmt.executeUpdate(
-                    "CREATE TABLE Expenses (" +
-                    "ExpenseID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
-                    "UserID INT NOT NULL," +
-                    "ExpenseDate DATE," +
-                    "Source VARCHAR(100)," +
-                    "Amount DECIMAL(10,2)," +
-                    "Category VARCHAR(50)," +
-                    "Notes VARCHAR(255)," +
-                    "FOREIGN KEY (UserID) REFERENCES Users(UserID))");
+        	stmt.executeUpdate(
+        		    "CREATE TABLE Expenses (" +
+        		    "ExpenseID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, " +
+        		    "UserID INT NOT NULL, " +
+        		    "ExpenseDate DATE, " +
+        		    "Source VARCHAR(100), " +
+        		    "Amount DECIMAL(10,2), " +
+        		    "Frequency INT DEFAULT 1 NOT NULL, " +
+        		    "Category VARCHAR(50), " +
+        		    "Notes VARCHAR(255), " +
+        		    "FOREIGN KEY (UserID) REFERENCES Users(UserID))"
+        		);
 
             System.out.println("Expenses table created.");
 
@@ -85,15 +87,17 @@ public class CreateTables {
 
         try {
 
-            stmt.executeUpdate(
-                    "CREATE TABLE Income (" +
-                    "IncomeID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY," +
-                    "UserID INT NOT NULL," +
-                    "IncomeDate DATE," +
-                    "Source VARCHAR(100)," +
-                    "Amount DECIMAL(10,2)," +
-                    "Notes VARCHAR(255)," +
-                    "FOREIGN KEY (UserID) REFERENCES Users(UserID))");
+        	stmt.executeUpdate(
+        		    "CREATE TABLE Income (" +
+        		    "IncomeID INT GENERATED ALWAYS AS IDENTITY PRIMARY KEY, " +
+        		    "UserID INT NOT NULL, " +
+        		    "IncomeDate DATE, " +
+        		    "Source VARCHAR(100), " +
+        		    "Amount DECIMAL(10,2), " +
+        		    "Frequency INT DEFAULT 1 NOT NULL, " +
+        		    "Notes VARCHAR(255), " +
+        		    "FOREIGN KEY (UserID) REFERENCES Users(UserID))"
+        		);
 
             System.out.println("Income table created.");
 

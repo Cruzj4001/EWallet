@@ -1,7 +1,6 @@
 package ewallet;
 
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
@@ -9,13 +8,12 @@ import java.util.List;
 
 public class ExpenseDAO {
 
-    // ADD EXPENSE
     public boolean addExpense(Expense expense) {
 
         String sql =
             "INSERT INTO Expenses " +
-            "(UserID, ExpenseDate, Source, Amount, Category, Notes) " +
-            "VALUES (?, ?, ?, ?, ?, ?)";
+            "(UserID, ExpenseDate, Source, Amount, Frequency, Category, Notes) " +
+            "VALUES (?, ?, ?, ?, ?, ?, ?)";
 
         try (
             Connection conn = Database.getConnection();
@@ -26,25 +24,25 @@ public class ExpenseDAO {
             ps.setDate(2, expense.getExpenseDate());
             ps.setString(3, expense.getSource());
             ps.setDouble(4, expense.getAmount());
-            ps.setString(5, expense.getCategory());
-            ps.setString(6, expense.getNotes());
+            ps.setInt(5, expense.getFrequency());
+            ps.setString(6, expense.getCategory());
+            ps.setString(7, expense.getNotes());
 
             ps.executeUpdate();
 
             return true;
 
         } catch (Exception e) {
-
             e.printStackTrace();
             return false;
         }
     }
 
+    public List<Expense> getExpensesByUser(
+            int userID) {
 
-    // GET ALL EXPENSES FOR ONE USER
-    public List<Expense> getExpensesByUser(int userID) {
-
-        List<Expense> expenses = new ArrayList<>();
+        List<Expense> expenses =
+            new ArrayList<>();
 
         String sql =
             "SELECT * FROM Expenses " +
@@ -58,19 +56,22 @@ public class ExpenseDAO {
 
             ps.setInt(1, userID);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs =
+                ps.executeQuery();
 
             while (rs.next()) {
 
-                Expense expense = new Expense(
-                    rs.getInt("ExpenseID"),
-                    rs.getInt("UserID"),
-                    rs.getDate("ExpenseDate"),
-                    rs.getString("Source"),
-                    rs.getDouble("Amount"),
-                    rs.getString("Category"),
-                    rs.getString("Notes")
-                );
+                Expense expense =
+                    new Expense(
+                        rs.getInt("ExpenseID"),
+                        rs.getInt("UserID"),
+                        rs.getDate("ExpenseDate"),
+                        rs.getString("Source"),
+                        rs.getDouble("Amount"),
+                        rs.getInt("Frequency"),
+                        rs.getString("Category"),
+                        rs.getString("Notes")
+                    );
 
                 expenses.add(expense);
             }
@@ -84,15 +85,15 @@ public class ExpenseDAO {
         return expenses;
     }
 
-
-    // UPDATE EXPENSE
-    public boolean updateExpense(Expense expense) {
+    public boolean updateExpense(
+            Expense expense) {
 
         String sql =
             "UPDATE Expenses SET " +
             "ExpenseDate = ?, " +
             "Source = ?, " +
             "Amount = ?, " +
+            "Frequency = ?, " +
             "Category = ?, " +
             "Notes = ? " +
             "WHERE ExpenseID = ? AND UserID = ?";
@@ -105,25 +106,24 @@ public class ExpenseDAO {
             ps.setDate(1, expense.getExpenseDate());
             ps.setString(2, expense.getSource());
             ps.setDouble(3, expense.getAmount());
-            ps.setString(4, expense.getCategory());
-            ps.setString(5, expense.getNotes());
-            ps.setInt(6, expense.getExpenseID());
-            ps.setInt(7, expense.getUserID());
+            ps.setInt(4, expense.getFrequency());
+            ps.setString(5, expense.getCategory());
+            ps.setString(6, expense.getNotes());
 
-            int rows = ps.executeUpdate();
+            ps.setInt(7, expense.getExpenseID());
+            ps.setInt(8, expense.getUserID());
 
-            return rows > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
             return false;
         }
     }
 
-
-    // DELETE EXPENSE
-    public boolean deleteExpense(int expenseID, int userID) {
+    public boolean deleteExpense(
+            int expenseID,
+            int userID) {
 
         String sql =
             "DELETE FROM Expenses " +
@@ -137,23 +137,18 @@ public class ExpenseDAO {
             ps.setInt(1, expenseID);
             ps.setInt(2, userID);
 
-            int rows = ps.executeUpdate();
-
-            return rows > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
             return false;
         }
     }
 
-
-    // GET TOTAL EXPENSES FOR USER
     public double getTotalExpenses(int userID) {
 
         String sql =
-            "SELECT SUM(Amount) AS Total " +
+            "SELECT SUM(Amount * Frequency) AS Total " +
             "FROM Expenses WHERE UserID = ?";
 
         try (
@@ -163,7 +158,8 @@ public class ExpenseDAO {
 
             ps.setInt(1, userID);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs =
+                ps.executeQuery();
 
             if (rs.next()) {
                 return rs.getDouble("Total");

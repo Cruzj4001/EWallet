@@ -12,8 +12,8 @@ public class IncomeDAO {
 
         String sql =
             "INSERT INTO Income " +
-            "(UserID, IncomeDate, Source, Amount, Notes) " +
-            "VALUES (?, ?, ?, ?, ?)";
+            "(UserID, IncomeDate, Source, Amount, Frequency, Notes) " +
+            "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (
             Connection conn = Database.getConnection();
@@ -24,14 +24,14 @@ public class IncomeDAO {
             ps.setDate(2, income.getIncomeDate());
             ps.setString(3, income.getSource());
             ps.setDouble(4, income.getAmount());
-            ps.setString(5, income.getNotes());
+            ps.setInt(5, income.getFrequency());
+            ps.setString(6, income.getNotes());
 
             ps.executeUpdate();
 
             return true;
 
         } catch (Exception e) {
-
             e.printStackTrace();
             return false;
         }
@@ -39,7 +39,8 @@ public class IncomeDAO {
 
     public List<Income> getIncomeByUser(int userID) {
 
-        List<Income> incomeList = new ArrayList<>();
+        List<Income> incomeList =
+            new ArrayList<>();
 
         String sql =
             "SELECT * FROM Income " +
@@ -53,18 +54,21 @@ public class IncomeDAO {
 
             ps.setInt(1, userID);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs =
+                ps.executeQuery();
 
             while (rs.next()) {
 
-                Income income = new Income(
-                    rs.getInt("IncomeID"),
-                    rs.getInt("UserID"),
-                    rs.getDate("IncomeDate"),
-                    rs.getString("Source"),
-                    rs.getDouble("Amount"),
-                    rs.getString("Notes")
-                );
+                Income income =
+                    new Income(
+                        rs.getInt("IncomeID"),
+                        rs.getInt("UserID"),
+                        rs.getDate("IncomeDate"),
+                        rs.getString("Source"),
+                        rs.getDouble("Amount"),
+                        rs.getInt("Frequency"),
+                        rs.getString("Notes")
+                    );
 
                 incomeList.add(income);
             }
@@ -85,6 +89,7 @@ public class IncomeDAO {
             "IncomeDate = ?, " +
             "Source = ?, " +
             "Amount = ?, " +
+            "Frequency = ?, " +
             "Notes = ? " +
             "WHERE IncomeID = ? AND UserID = ?";
 
@@ -96,22 +101,23 @@ public class IncomeDAO {
             ps.setDate(1, income.getIncomeDate());
             ps.setString(2, income.getSource());
             ps.setDouble(3, income.getAmount());
-            ps.setString(4, income.getNotes());
-            ps.setInt(5, income.getIncomeID());
-            ps.setInt(6, income.getUserID());
+            ps.setInt(4, income.getFrequency());
+            ps.setString(5, income.getNotes());
 
-            int rows = ps.executeUpdate();
+            ps.setInt(6, income.getIncomeID());
+            ps.setInt(7, income.getUserID());
 
-            return rows > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
             return false;
         }
     }
 
-    public boolean deleteIncome(int incomeID, int userID) {
+    public boolean deleteIncome(
+            int incomeID,
+            int userID) {
 
         String sql =
             "DELETE FROM Income " +
@@ -125,12 +131,9 @@ public class IncomeDAO {
             ps.setInt(1, incomeID);
             ps.setInt(2, userID);
 
-            int rows = ps.executeUpdate();
-
-            return rows > 0;
+            return ps.executeUpdate() > 0;
 
         } catch (Exception e) {
-
             e.printStackTrace();
             return false;
         }
@@ -139,7 +142,7 @@ public class IncomeDAO {
     public double getTotalIncome(int userID) {
 
         String sql =
-            "SELECT SUM(Amount) AS Total " +
+            "SELECT SUM(Amount * Frequency) AS Total " +
             "FROM Income WHERE UserID = ?";
 
         try (
@@ -149,7 +152,8 @@ public class IncomeDAO {
 
             ps.setInt(1, userID);
 
-            ResultSet rs = ps.executeQuery();
+            ResultSet rs =
+                ps.executeQuery();
 
             if (rs.next()) {
                 return rs.getDouble("Total");

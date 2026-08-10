@@ -9,21 +9,29 @@ public class Expense {
     private Date expenseDate;
     private String source;
     private double amount;
+    private int frequency;
     private String category;
     private String notes;
 
     public Expense() {
     }
 
-    public Expense(int expenseID, int userID, Date expenseDate,
-                   String source, double amount,
-                   String category, String notes) {
+    public Expense(
+            int expenseID,
+            int userID,
+            Date expenseDate,
+            String source,
+            double amount,
+            int frequency,
+            String category,
+            String notes) {
 
         this.expenseID = expenseID;
         this.userID = userID;
         this.expenseDate = expenseDate;
         this.source = source;
         this.amount = amount;
+        this.frequency = frequency;
         this.category = category;
         this.notes = notes;
     }
@@ -68,6 +76,14 @@ public class Expense {
         this.amount = amount;
     }
 
+    public int getFrequency() {
+        return frequency;
+    }
+
+    public void setFrequency(int frequency) {
+        this.frequency = frequency;
+    }
+
     public String getCategory() {
         return category;
     }
@@ -84,13 +100,19 @@ public class Expense {
         this.notes = notes;
     }
 
+    public double getYearlyAmount() {
+        return amount * frequency;
+    }
+
     @Override
     public String toString() {
+
         return "Expense ID: " + expenseID
                 + " | Date: " + expenseDate
                 + " | Source: " + source
                 + " | Category: " + category
                 + " | Amount: $" + String.format("%.2f", amount)
+                + " | Frequency: " + frequency
                 + " | Notes: " + notes;
     }
 }

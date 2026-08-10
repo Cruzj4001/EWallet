@@ -20,8 +20,7 @@ public class CSVImporter {
 
     public int importIncome(
             int userID,
-            String fileName
-    ) {
+            String fileName) {
 
         int importedCount = 0;
 
@@ -32,10 +31,9 @@ public class CSVImporter {
                 )
         ) {
 
-            String line;
-
-            // Skip header.
             reader.readLine();
+
+            String line;
 
             while ((line = reader.readLine()) != null) {
 
@@ -46,28 +44,16 @@ public class CSVImporter {
                 List<String> values =
                         parseCSVLine(line);
 
-                /*
-                 * Expected import format:
-                 *
-                 * Date,Source,Amount,Notes
-                 */
+                // Date,Source,Amount,Frequency,Notes
 
-                if (values.size() < 3) {
-
-                    System.out.println(
-                        "Skipped invalid income row: " +
-                        line
-                    );
-
+                if (values.size() < 4) {
                     continue;
                 }
 
                 try {
 
                     Date date =
-                        Date.valueOf(
-                            values.get(0).trim()
-                        );
+                        Date.valueOf(values.get(0).trim());
 
                     String source =
                         values.get(1).trim();
@@ -77,12 +63,15 @@ public class CSVImporter {
                             values.get(2).trim()
                         );
 
-                    String notes = "";
+                    int frequency =
+                        Integer.parseInt(
+                            values.get(3).trim()
+                        );
 
-                    if (values.size() >= 4) {
-                        notes =
-                            values.get(3).trim();
-                    }
+                    String notes =
+                        values.size() >= 5
+                            ? values.get(4).trim()
+                            : "";
 
                     Income income =
                         new Income(
@@ -91,6 +80,7 @@ public class CSVImporter {
                             date,
                             source,
                             amount,
+                            frequency,
                             notes
                         );
 
@@ -117,8 +107,7 @@ public class CSVImporter {
 
     public int importExpenses(
             int userID,
-            String fileName
-    ) {
+            String fileName) {
 
         int importedCount = 0;
 
@@ -129,10 +118,9 @@ public class CSVImporter {
                 )
         ) {
 
-            String line;
-
-            // Skip header.
             reader.readLine();
+
+            String line;
 
             while ((line = reader.readLine()) != null) {
 
@@ -143,28 +131,16 @@ public class CSVImporter {
                 List<String> values =
                         parseCSVLine(line);
 
-                /*
-                 * Expected format:
-                 *
-                 * Date,Source,Amount,Category,Notes
-                 */
+                // Date,Source,Amount,Frequency,Category,Notes
 
-                if (values.size() < 4) {
-
-                    System.out.println(
-                        "Skipped invalid expense row: " +
-                        line
-                    );
-
+                if (values.size() < 5) {
                     continue;
                 }
 
                 try {
 
                     Date date =
-                        Date.valueOf(
-                            values.get(0).trim()
-                        );
+                        Date.valueOf(values.get(0).trim());
 
                     String source =
                         values.get(1).trim();
@@ -174,15 +150,18 @@ public class CSVImporter {
                             values.get(2).trim()
                         );
 
+                    int frequency =
+                        Integer.parseInt(
+                            values.get(3).trim()
+                        );
+
                     String category =
-                        values.get(3).trim();
+                        values.get(4).trim();
 
-                    String notes = "";
-
-                    if (values.size() >= 5) {
-                        notes =
-                            values.get(4).trim();
-                    }
+                    String notes =
+                        values.size() >= 6
+                            ? values.get(5).trim()
+                            : "";
 
                     Expense expense =
                         new Expense(
@@ -191,6 +170,7 @@ public class CSVImporter {
                             date,
                             source,
                             amount,
+                            frequency,
                             category,
                             notes
                         );
@@ -217,8 +197,7 @@ public class CSVImporter {
     }
 
     private List<String> parseCSVLine(
-            String line
-    ) {
+            String line) {
 
         List<String> values =
                 new ArrayList<>();
@@ -228,7 +207,9 @@ public class CSVImporter {
 
         boolean insideQuotes = false;
 
-        for (int i = 0; i < line.length(); i++) {
+        for (int i = 0;
+             i < line.length();
+             i++) {
 
             char c =
                 line.charAt(i);
