@@ -59,3 +59,95 @@
     <script type = "module" src = "../JS_Files/financialSummary.js"></script>
 </body>
 </html>
+
+<section id="reportTools">
+
+    <h2 class="title">Reports & Data</h2>
+
+    <div class="report-tools-container">
+
+        <!-- Financial Reports -->
+        <div class="report-tool-card">
+            <h3>Financial Reports</h3>
+
+            <div class="report-button-group">
+                <button id="incomeReportBtn">
+                    View Income Report
+                </button>
+
+                <button id="expenseReportBtn">
+                    View Expense Report
+                </button>
+
+                <button id="fullReportBtn">
+                    View Full Financial Report
+                </button>
+            </div>
+        </div>
+
+        <!-- CSV Export -->
+        <div class="report-tool-card">
+            <h3>Export Data</h3>
+
+            <div class="report-button-group">
+                <button id="exportIncomeBtn">
+                    Export Income CSV
+                </button>
+
+                <button id="exportExpenseBtn">
+                    Export Expense CSV
+                </button>
+
+                <button id="exportFullBtn">
+                    Export Full Report CSV
+                </button>
+            </div>
+        </div>
+
+        <!-- CSV Import -->
+        <div class="report-tool-card">
+            <h3>Import Data</h3>
+
+            <div class="import-row">
+
+                <label for="incomeCsvInput">
+                    Income CSV:
+                </label>
+
+                <input
+                    type="file"
+                    id="incomeCsvInput"
+                    accept=".csv"
+                >
+
+                <button id="importIncomeBtn">
+                    Import Income
+                </button>
+
+            </div>
+
+            <div class="import-row">
+
+                <label for="expenseCsvInput">
+                    Expense CSV:
+                </label>
+
+                <input
+                    type="file"
+                    id="expenseCsvInput"
+                    accept=".csv"
+                >
+
+                <button id="importExpenseBtn">
+                    Import Expenses
+                </button>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div id="reportOutput"></div>
+
+</section>
+<script type="module" src="../JS_Files/financialSummary.js"></script>
