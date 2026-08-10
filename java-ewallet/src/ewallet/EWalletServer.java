@@ -10,7 +10,9 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class EWalletServer {
@@ -19,6 +21,11 @@ public class EWalletServer {
 
     private static final Path WEB_ROOT =
             Path.of("..").toAbsolutePath().normalize();
+
+
+    // ==================================================
+    // MAIN
+    // ==================================================
 
     public static void main(String[] args) {
 
@@ -30,17 +37,41 @@ public class EWalletServer {
                             0
                     );
 
+
             // Health
             server.createContext(
                     "/api/health",
                     EWalletServer::handleHealth
             );
 
+
             // Authentication
             server.createContext(
                     "/api/auth",
                     EWalletServer::handleAuth
             );
+
+
+            // Income CRUD
+            server.createContext(
+                    "/api/income",
+                    EWalletServer::handleIncome
+            );
+
+
+            // Expense CRUD
+            server.createContext(
+                    "/api/expenses",
+                    EWalletServer::handleExpenses
+            );
+
+
+            // Planning CRUD
+            server.createContext(
+                    "/api/plans",
+                    EWalletServer::handlePlans
+            );
+
 
             // Reports
             server.createContext(
@@ -58,6 +89,7 @@ public class EWalletServer {
                     EWalletServer::handleFullReport
             );
 
+
             // CSV Export
             server.createContext(
                     "/api/export/income",
@@ -74,6 +106,7 @@ public class EWalletServer {
                     EWalletServer::handleFullExport
             );
 
+
             // CSV Import
             server.createContext(
                     "/api/import/income",
@@ -85,13 +118,16 @@ public class EWalletServer {
                     EWalletServer::handleExpenseImport
             );
 
-            // Existing website
+
+            // Original HTML GUI
             server.createContext(
                     "/",
                     EWalletServer::handleStaticFile
             );
 
+
             server.start();
+
 
             System.out.println(
                     "======================================"
@@ -99,12 +135,6 @@ public class EWalletServer {
 
             System.out.println(
                     "EWallet backend is running!"
-            );
-
-            System.out.println();
-
-            System.out.println(
-                    "Open the application at:"
             );
 
             System.out.println(
@@ -119,8 +149,8 @@ public class EWalletServer {
 
             System.out.println(
                     "http://localhost:"
-                    + PORT
-                    + "/api/health"
+                            + PORT
+                            + "/api/health"
             );
 
             System.out.println();
@@ -129,17 +159,21 @@ public class EWalletServer {
                     "Serving GUI files from:"
             );
 
-            System.out.println(WEB_ROOT);
+            System.out.println(
+                    WEB_ROOT
+            );
 
             System.out.println(
                     "======================================"
             );
+
 
         } catch (IOException e) {
 
             e.printStackTrace();
         }
     }
+
 
     // ==================================================
     // HEALTH
@@ -162,6 +196,7 @@ public class EWalletServer {
         );
     }
 
+
     // ==================================================
     // AUTHENTICATION
     // ==================================================
@@ -176,6 +211,7 @@ public class EWalletServer {
             return;
         }
 
+
         if (!exchange
                 .getRequestMethod()
                 .equalsIgnoreCase("POST")) {
@@ -184,22 +220,23 @@ public class EWalletServer {
                     exchange,
                     405,
                     "{\"success\":false,"
-                    + "\"message\":\"POST required\"}"
+                            + "\"message\":\"POST required\"}"
             );
 
             return;
         }
 
-        String requestBody =
-                new String(
-                        exchange
-                                .getRequestBody()
-                                .readAllBytes(),
-                        StandardCharsets.UTF_8
-                );
 
         Map<String, String> form =
-                parseForm(requestBody);
+                readForm(exchange);
+
+
+        String mode =
+                form.getOrDefault(
+                        "mode",
+                        "login"
+                ).trim();
+
 
         String username =
                 form.getOrDefault(
@@ -207,11 +244,13 @@ public class EWalletServer {
                         ""
                 ).trim();
 
+
         String passwordHash =
                 form.getOrDefault(
                         "passwordHash",
                         ""
                 ).trim();
+
 
         double baseBalance =
                 parseDouble(
@@ -219,35 +258,59 @@ public class EWalletServer {
                         500.00
                 );
 
+
         double baseIncome =
                 parseDouble(
                         form.get("baseIncome"),
                         50.00
                 );
 
+
         if (
                 username.isEmpty()
-                || passwordHash.isEmpty()
+                        || passwordHash.isEmpty()
         ) {
 
             sendJson(
                     exchange,
                     400,
                     "{\"success\":false,"
-                    + "\"message\":\"Username and password are required.\"}"
+                            + "\"message\":\"Username and password are required.\"}"
             );
 
             return;
         }
 
+
         UserDAO dao =
                 new UserDAO();
 
-        User existing =
-                dao.getUserByUsername(username);
 
-        // Existing user = login
-        if (existing != null) {
+        User existing =
+                dao.getUserByUsername(
+                        username
+                );
+
+
+        // LOGIN
+        if (
+                mode.equalsIgnoreCase(
+                        "login"
+                )
+        ) {
+
+            if (existing == null) {
+
+                sendJson(
+                        exchange,
+                        404,
+                        "{\"success\":false,"
+                                + "\"message\":\"Account not found.\"}"
+                );
+
+                return;
+            }
+
 
             User loggedIn =
                     dao.loginUser(
@@ -255,17 +318,19 @@ public class EWalletServer {
                             passwordHash
                     );
 
+
             if (loggedIn == null) {
 
                 sendJson(
                         exchange,
                         401,
                         "{\"success\":false,"
-                        + "\"message\":\"Invalid account credentials provided.\"}"
+                                + "\"message\":\"Invalid username or password.\"}"
                 );
 
                 return;
             }
+
 
             sendUserResponse(
                     exchange,
@@ -276,52 +341,93 @@ public class EWalletServer {
             return;
         }
 
-        // New user = create account
-        User newUser =
-                new User(
-                        0,
-                        username,
-                        passwordHash,
-                        baseBalance,
-                        baseIncome
+
+        // CREATE ACCOUNT
+        if (
+                mode.equalsIgnoreCase(
+                        "create"
+                )
+        ) {
+
+            if (existing != null) {
+
+                sendJson(
+                        exchange,
+                        409,
+                        "{\"success\":false,"
+                                + "\"message\":\"That username already exists.\"}"
                 );
 
-        boolean created =
-                dao.addUser(newUser);
+                return;
+            }
 
-        if (!created) {
 
-            sendJson(
+            User newUser =
+                    new User(
+                            0,
+                            username,
+                            passwordHash,
+                            baseBalance,
+                            baseIncome
+                    );
+
+
+            boolean created =
+                    dao.addUser(
+                            newUser
+                    );
+
+
+            if (!created) {
+
+                sendJson(
+                        exchange,
+                        500,
+                        "{\"success\":false,"
+                                + "\"message\":\"Account could not be created.\"}"
+                );
+
+                return;
+            }
+
+
+            User createdUser =
+                    dao.getUserByUsername(
+                            username
+                    );
+
+
+            if (createdUser == null) {
+
+                sendJson(
+                        exchange,
+                        500,
+                        "{\"success\":false,"
+                                + "\"message\":\"Account could not be loaded.\"}"
+                );
+
+                return;
+            }
+
+
+            sendUserResponse(
                     exchange,
-                    500,
-                    "{\"success\":false,"
-                    + "\"message\":\"Account could not be created.\"}"
+                    createdUser,
+                    true
             );
 
             return;
         }
 
-        User createdUser =
-                dao.getUserByUsername(username);
 
-        if (createdUser == null) {
-
-            sendJson(
-                    exchange,
-                    500,
-                    "{\"success\":false,"
-                    + "\"message\":\"Account was created but could not be loaded.\"}"
-            );
-
-            return;
-        }
-
-        sendUserResponse(
+        sendJson(
                 exchange,
-                createdUser,
-                true
+                400,
+                "{\"success\":false,"
+                        + "\"message\":\"Invalid authentication mode.\"}"
         );
     }
+
 
     private static void sendUserResponse(
             HttpExchange exchange,
@@ -331,22 +437,27 @@ public class EWalletServer {
 
         String json =
                 "{"
-                + "\"success\":true,"
-                + "\"created\":" + created + ","
-                + "\"user\":{"
-                + "\"userID\":"
-                + user.getUserID()
-                + ","
-                + "\"username\":\""
-                + escapeJson(user.getUsername())
-                + "\","
-                + "\"baseBalance\":"
-                + user.getBaseBalance()
-                + ","
-                + "\"baseIncome\":"
-                + user.getBaseIncome()
-                + "}"
-                + "}";
+                        + "\"success\":true,"
+                        + "\"created\":"
+                        + created
+                        + ","
+                        + "\"user\":{"
+                        + "\"userID\":"
+                        + user.getUserID()
+                        + ","
+                        + "\"username\":\""
+                        + escapeJson(
+                                user.getUsername()
+                        )
+                        + "\","
+                        + "\"baseBalance\":"
+                        + user.getBaseBalance()
+                        + ","
+                        + "\"baseIncome\":"
+                        + user.getBaseIncome()
+                        + "}"
+                        + "}";
+
 
         sendJson(
                 exchange,
@@ -354,6 +465,1587 @@ public class EWalletServer {
                 json
         );
     }
+
+
+    // ==================================================
+    // INCOME CRUD
+    // ==================================================
+
+    private static void handleIncome(
+            HttpExchange exchange)
+            throws IOException {
+
+        addCorsHeaders(exchange);
+
+        if (handleOptions(exchange)) {
+            return;
+        }
+
+
+        String method =
+                exchange
+                        .getRequestMethod()
+                        .toUpperCase();
+
+
+        switch (method) {
+
+            case "GET" ->
+                    getIncome(exchange);
+
+            case "POST" ->
+                    addIncome(exchange);
+
+            case "PUT" ->
+                    updateIncome(exchange);
+
+            case "DELETE" ->
+                    deleteIncome(exchange);
+
+            default ->
+                    sendJson(
+                            exchange,
+                            405,
+                            "{\"success\":false,"
+                                    + "\"message\":\"Unsupported request method.\"}"
+                    );
+        }
+    }
+
+
+    private static void getIncome(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> query =
+                parseQuery(exchange);
+
+
+        int userID =
+                parseInt(
+                        query.get("userID"),
+                        -1
+                );
+
+
+        if (userID <= 0) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Valid userID required.\"}"
+            );
+
+            return;
+        }
+
+
+        IncomeDAO dao =
+                new IncomeDAO();
+
+
+        List<Income> incomeList =
+                dao.getIncomeByUser(
+                        userID
+                );
+
+
+        StringBuilder json =
+                new StringBuilder();
+
+
+        json.append(
+                "{\"success\":true,\"income\":["
+        );
+
+
+        for (
+                int i = 0;
+                i < incomeList.size();
+                i++
+        ) {
+
+            Income income =
+                    incomeList.get(i);
+
+
+            if (i > 0) {
+                json.append(",");
+            }
+
+
+            json.append("{");
+
+            json.append(
+                    "\"incomeID\":"
+            );
+
+            json.append(
+                    income.getIncomeID()
+            );
+
+            json.append(
+                    ",\"userID\":"
+            );
+
+            json.append(
+                    income.getUserID()
+            );
+
+            json.append(
+                    ",\"date\":\""
+            );
+
+            json.append(
+                    income.getIncomeDate()
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"source\":\""
+            );
+
+            json.append(
+                    escapeJson(
+                            income.getSource()
+                    )
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"amount\":"
+            );
+
+            json.append(
+                    income.getAmount()
+            );
+
+            json.append(
+                    ",\"frequency\":"
+            );
+
+            json.append(
+                    income.getFrequency()
+            );
+
+            json.append(
+                    ",\"notes\":\""
+            );
+
+            json.append(
+                    escapeJson(
+                            income.getNotes()
+                    )
+            );
+
+            json.append("\"");
+
+            json.append("}");
+        }
+
+
+        json.append("]}");
+
+
+        sendJson(
+                exchange,
+                200,
+                json.toString()
+        );
+    }
+
+
+    private static void addIncome(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> form =
+                readForm(exchange);
+
+
+        int userID =
+                parseInt(
+                        form.get("userID"),
+                        -1
+                );
+
+
+        String date =
+                form.getOrDefault(
+                        "date",
+                        ""
+                );
+
+
+        String source =
+                form.getOrDefault(
+                        "source",
+                        ""
+                ).trim();
+
+
+        double amount =
+                parseDouble(
+                        form.get("amount"),
+                        -1
+                );
+
+
+        int frequency =
+                parseInt(
+                        form.get("frequency"),
+                        1
+                );
+
+
+        String notes =
+                form.getOrDefault(
+                        "notes",
+                        ""
+                );
+
+
+        if (
+                userID <= 0
+                        || date.isBlank()
+                        || source.isBlank()
+                        || amount < 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid income information.\"}"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            Income income =
+                    new Income(
+                            0,
+                            userID,
+                            Date.valueOf(date),
+                            source,
+                            amount,
+                            frequency,
+                            notes
+                    );
+
+
+            IncomeDAO dao =
+                    new IncomeDAO();
+
+
+            boolean success =
+                    dao.addIncome(
+                            income
+                    );
+
+
+            if (!success) {
+
+                sendJson(
+                        exchange,
+                        500,
+                        "{\"success\":false,"
+                                + "\"message\":\"Income could not be added.\"}"
+                );
+
+                return;
+            }
+
+
+            sendJson(
+                    exchange,
+                    200,
+                    "{\"success\":true,"
+                            + "\"message\":\"Income added successfully.\"}"
+            );
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid income date or values.\"}"
+            );
+        }
+    }
+
+
+    private static void updateIncome(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> form =
+                readForm(exchange);
+
+
+        int incomeID =
+                parseInt(
+                        form.get("incomeID"),
+                        -1
+                );
+
+
+        int userID =
+                parseInt(
+                        form.get("userID"),
+                        -1
+                );
+
+
+        String date =
+                form.getOrDefault(
+                        "date",
+                        ""
+                );
+
+
+        String source =
+                form.getOrDefault(
+                        "source",
+                        ""
+                ).trim();
+
+
+        double amount =
+                parseDouble(
+                        form.get("amount"),
+                        -1
+                );
+
+
+        int frequency =
+                parseInt(
+                        form.get("frequency"),
+                        1
+                );
+
+
+        String notes =
+                form.getOrDefault(
+                        "notes",
+                        ""
+                );
+
+
+        if (
+                incomeID <= 0
+                        || userID <= 0
+                        || date.isBlank()
+                        || source.isBlank()
+                        || amount < 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid income information.\"}"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            Income income =
+                    new Income(
+                            incomeID,
+                            userID,
+                            Date.valueOf(date),
+                            source,
+                            amount,
+                            frequency,
+                            notes
+                    );
+
+
+            IncomeDAO dao =
+                    new IncomeDAO();
+
+
+            boolean success =
+                    dao.updateIncome(
+                            income
+                    );
+
+
+            if (!success) {
+
+                sendJson(
+                        exchange,
+                        404,
+                        "{\"success\":false,"
+                                + "\"message\":\"Income record was not found.\"}"
+                );
+
+                return;
+            }
+
+
+            sendJson(
+                    exchange,
+                    200,
+                    "{\"success\":true,"
+                            + "\"message\":\"Income updated successfully.\"}"
+            );
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid income values.\"}"
+            );
+        }
+    }
+
+
+    private static void deleteIncome(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> query =
+                parseQuery(exchange);
+
+
+        int incomeID =
+                parseInt(
+                        query.get("incomeID"),
+                        -1
+                );
+
+
+        int userID =
+                parseInt(
+                        query.get("userID"),
+                        -1
+                );
+
+
+        if (
+                incomeID <= 0
+                        || userID <= 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Valid incomeID and userID required.\"}"
+            );
+
+            return;
+        }
+
+
+        IncomeDAO dao =
+                new IncomeDAO();
+
+
+        boolean success =
+                dao.deleteIncome(
+                        incomeID,
+                        userID
+                );
+
+
+        if (!success) {
+
+            sendJson(
+                    exchange,
+                    404,
+                    "{\"success\":false,"
+                            + "\"message\":\"Income record was not found.\"}"
+            );
+
+            return;
+        }
+
+
+        sendJson(
+                exchange,
+                200,
+                "{\"success\":true,"
+                        + "\"message\":\"Income deleted successfully.\"}"
+        );
+    }
+
+
+    // ==================================================
+    // EXPENSE CRUD
+    // ==================================================
+
+    private static void handleExpenses(
+            HttpExchange exchange)
+            throws IOException {
+
+        addCorsHeaders(exchange);
+
+        if (handleOptions(exchange)) {
+            return;
+        }
+
+
+        String method =
+                exchange
+                        .getRequestMethod()
+                        .toUpperCase();
+
+
+        switch (method) {
+
+            case "GET" ->
+                    getExpenses(exchange);
+
+            case "POST" ->
+                    addExpense(exchange);
+
+            case "PUT" ->
+                    updateExpense(exchange);
+
+            case "DELETE" ->
+                    deleteExpense(exchange);
+
+            default ->
+                    sendJson(
+                            exchange,
+                            405,
+                            "{\"success\":false,"
+                                    + "\"message\":\"Unsupported request method.\"}"
+                    );
+        }
+    }
+
+
+    private static void getExpenses(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> query =
+                parseQuery(exchange);
+
+
+        int userID =
+                parseInt(
+                        query.get("userID"),
+                        -1
+                );
+
+
+        if (userID <= 0) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Valid userID required.\"}"
+            );
+
+            return;
+        }
+
+
+        ExpenseDAO dao =
+                new ExpenseDAO();
+
+
+        List<Expense> expenses =
+                dao.getExpensesByUser(
+                        userID
+                );
+
+
+        StringBuilder json =
+                new StringBuilder();
+
+
+        json.append(
+                "{\"success\":true,\"expenses\":["
+        );
+
+
+        for (
+                int i = 0;
+                i < expenses.size();
+                i++
+        ) {
+
+            Expense expense =
+                    expenses.get(i);
+
+
+            if (i > 0) {
+                json.append(",");
+            }
+
+
+            json.append("{");
+
+            json.append(
+                    "\"expenseID\":"
+            );
+
+            json.append(
+                    expense.getExpenseID()
+            );
+
+            json.append(
+                    ",\"userID\":"
+            );
+
+            json.append(
+                    expense.getUserID()
+            );
+
+            json.append(
+                    ",\"date\":\""
+            );
+
+            json.append(
+                    expense.getExpenseDate()
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"source\":\""
+            );
+
+            json.append(
+                    escapeJson(
+                            expense.getSource()
+                    )
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"amount\":"
+            );
+
+            json.append(
+                    expense.getAmount()
+            );
+
+            json.append(
+                    ",\"frequency\":"
+            );
+
+            json.append(
+                    expense.getFrequency()
+            );
+
+            json.append(
+                    ",\"category\":\""
+            );
+
+            json.append(
+                    escapeJson(
+                            expense.getCategory()
+                    )
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"notes\":\""
+            );
+
+            json.append(
+                    escapeJson(
+                            expense.getNotes()
+                    )
+            );
+
+            json.append("\"");
+
+            json.append("}");
+        }
+
+
+        json.append("]}");
+
+
+        sendJson(
+                exchange,
+                200,
+                json.toString()
+        );
+    }
+
+
+    private static void addExpense(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> form =
+                readForm(exchange);
+
+
+        int userID =
+                parseInt(
+                        form.get("userID"),
+                        -1
+                );
+
+
+        String date =
+                form.getOrDefault(
+                        "date",
+                        ""
+                );
+
+
+        String source =
+                form.getOrDefault(
+                        "source",
+                        ""
+                ).trim();
+
+
+        double amount =
+                parseDouble(
+                        form.get("amount"),
+                        -1
+                );
+
+
+        int frequency =
+                parseInt(
+                        form.get("frequency"),
+                        1
+                );
+
+
+        String category =
+                form.getOrDefault(
+                        "category",
+                        "General"
+                ).trim();
+
+
+        String notes =
+                form.getOrDefault(
+                        "notes",
+                        ""
+                );
+
+
+        if (
+                userID <= 0
+                        || date.isBlank()
+                        || source.isBlank()
+                        || amount < 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid expense information.\"}"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            Expense expense =
+                    new Expense(
+                            0,
+                            userID,
+                            Date.valueOf(date),
+                            source,
+                            amount,
+                            frequency,
+                            category,
+                            notes
+                    );
+
+
+            ExpenseDAO dao =
+                    new ExpenseDAO();
+
+
+            boolean success =
+                    dao.addExpense(
+                            expense
+                    );
+
+
+            if (!success) {
+
+                sendJson(
+                        exchange,
+                        500,
+                        "{\"success\":false,"
+                                + "\"message\":\"Expense could not be added.\"}"
+                );
+
+                return;
+            }
+
+
+            sendJson(
+                    exchange,
+                    200,
+                    "{\"success\":true,"
+                            + "\"message\":\"Expense added successfully.\"}"
+            );
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid expense date or values.\"}"
+            );
+        }
+    }
+
+
+    private static void updateExpense(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> form =
+                readForm(exchange);
+
+
+        int expenseID =
+                parseInt(
+                        form.get("expenseID"),
+                        -1
+                );
+
+
+        int userID =
+                parseInt(
+                        form.get("userID"),
+                        -1
+                );
+
+
+        String date =
+                form.getOrDefault(
+                        "date",
+                        ""
+                );
+
+
+        String source =
+                form.getOrDefault(
+                        "source",
+                        ""
+                ).trim();
+
+
+        double amount =
+                parseDouble(
+                        form.get("amount"),
+                        -1
+                );
+
+
+        int frequency =
+                parseInt(
+                        form.get("frequency"),
+                        1
+                );
+
+
+        String category =
+                form.getOrDefault(
+                        "category",
+                        "General"
+                ).trim();
+
+
+        String notes =
+                form.getOrDefault(
+                        "notes",
+                        ""
+                );
+
+
+        if (
+                expenseID <= 0
+                        || userID <= 0
+                        || date.isBlank()
+                        || source.isBlank()
+                        || amount < 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid expense information.\"}"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            Expense expense =
+                    new Expense(
+                            expenseID,
+                            userID,
+                            Date.valueOf(date),
+                            source,
+                            amount,
+                            frequency,
+                            category,
+                            notes
+                    );
+
+
+            ExpenseDAO dao =
+                    new ExpenseDAO();
+
+
+            boolean success =
+                    dao.updateExpense(
+                            expense
+                    );
+
+
+            if (!success) {
+
+                sendJson(
+                        exchange,
+                        404,
+                        "{\"success\":false,"
+                                + "\"message\":\"Expense record was not found.\"}"
+                );
+
+                return;
+            }
+
+
+            sendJson(
+                    exchange,
+                    200,
+                    "{\"success\":true,"
+                            + "\"message\":\"Expense updated successfully.\"}"
+            );
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid expense values.\"}"
+            );
+        }
+    }
+
+
+    private static void deleteExpense(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> query =
+                parseQuery(exchange);
+
+
+        int expenseID =
+                parseInt(
+                        query.get("expenseID"),
+                        -1
+                );
+
+
+        int userID =
+                parseInt(
+                        query.get("userID"),
+                        -1
+                );
+
+
+        if (
+                expenseID <= 0
+                        || userID <= 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Valid expenseID and userID required.\"}"
+            );
+
+            return;
+        }
+
+
+        ExpenseDAO dao =
+                new ExpenseDAO();
+
+
+        boolean success =
+                dao.deleteExpense(
+                        expenseID,
+                        userID
+                );
+
+
+        if (!success) {
+
+            sendJson(
+                    exchange,
+                    404,
+                    "{\"success\":false,"
+                            + "\"message\":\"Expense record was not found.\"}"
+            );
+
+            return;
+        }
+
+
+        sendJson(
+                exchange,
+                200,
+                "{\"success\":true,"
+                        + "\"message\":\"Expense deleted successfully.\"}"
+        );
+    }
+
+
+    // ==================================================
+    // PLAN CRUD
+    // ==================================================
+
+    private static void handlePlans(
+            HttpExchange exchange)
+            throws IOException {
+
+        addCorsHeaders(exchange);
+
+        if (handleOptions(exchange)) {
+            return;
+        }
+
+
+        String method =
+                exchange
+                        .getRequestMethod()
+                        .toUpperCase();
+
+
+        switch (method) {
+
+            case "GET" ->
+                    getPlans(exchange);
+
+            case "POST" ->
+                    addPlan(exchange);
+
+            case "PUT" ->
+                    updatePlan(exchange);
+
+            case "DELETE" ->
+                    deletePlan(exchange);
+
+            default ->
+                    sendJson(
+                            exchange,
+                            405,
+                            "{\"success\":false,"
+                                    + "\"message\":\"Unsupported request method.\"}"
+                    );
+        }
+    }
+
+
+    private static void getPlans(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> query =
+                parseQuery(exchange);
+
+
+        int userID =
+                parseInt(
+                        query.get("userID"),
+                        -1
+                );
+
+
+        if (userID <= 0) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Valid userID required.\"}"
+            );
+
+            return;
+        }
+
+
+        PlanDAO dao =
+                new PlanDAO();
+
+
+        List<Plan> plans =
+                dao.getPlansByUser(
+                        userID
+                );
+
+
+        StringBuilder json =
+                new StringBuilder();
+
+
+        json.append(
+                "{\"success\":true,\"plans\":["
+        );
+
+
+        for (
+                int i = 0;
+                i < plans.size();
+                i++
+        ) {
+
+            Plan plan =
+                    plans.get(i);
+
+
+            if (i > 0) {
+                json.append(",");
+            }
+
+
+            json.append("{");
+
+            json.append(
+                    "\"planID\":"
+            );
+
+            json.append(
+                    plan.getPlanID()
+            );
+
+            json.append(
+                    ",\"userID\":"
+            );
+
+            json.append(
+                    plan.getUserID()
+            );
+
+            json.append(
+                    ",\"date\":\""
+            );
+
+            json.append(
+                    plan.getPlanDate()
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"description\":\""
+            );
+
+            json.append(
+                    escapeJson(
+                            plan.getDescription()
+                    )
+            );
+
+            json.append("\"");
+
+            json.append(
+                    ",\"goalAmount\":"
+            );
+
+            json.append(
+                    plan.getGoalAmount()
+            );
+
+            json.append(
+                    ",\"savedAmount\":"
+            );
+
+            json.append(
+                    plan.getSavedAmount()
+            );
+
+            json.append("}");
+        }
+
+
+        json.append("]}");
+
+
+        sendJson(
+                exchange,
+                200,
+                json.toString()
+        );
+    }
+
+
+    private static void addPlan(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> form =
+                readForm(exchange);
+
+
+        int userID =
+                parseInt(
+                        form.get("userID"),
+                        -1
+                );
+
+
+        String date =
+                form.getOrDefault(
+                        "date",
+                        ""
+                );
+
+
+        String description =
+                form.getOrDefault(
+                        "description",
+                        ""
+                ).trim();
+
+
+        double goalAmount =
+                parseDouble(
+                        form.get("goalAmount"),
+                        -1
+                );
+
+
+        double savedAmount =
+                parseDouble(
+                        form.get("savedAmount"),
+                        0
+                );
+
+
+        if (
+                userID <= 0
+                        || date.isBlank()
+                        || description.isBlank()
+                        || goalAmount < 0
+                        || savedAmount < 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid planning information.\"}"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            Plan plan =
+                    new Plan(
+                            0,
+                            userID,
+                            Date.valueOf(date),
+                            description,
+                            goalAmount,
+                            savedAmount
+                    );
+
+
+            PlanDAO dao =
+                    new PlanDAO();
+
+
+            boolean success =
+                    dao.addPlan(
+                            plan
+                    );
+
+
+            if (!success) {
+
+                sendJson(
+                        exchange,
+                        500,
+                        "{\"success\":false,"
+                                + "\"message\":\"Plan could not be added.\"}"
+                );
+
+                return;
+            }
+
+
+            sendJson(
+                    exchange,
+                    200,
+                    "{\"success\":true,"
+                            + "\"message\":\"Plan added successfully.\"}"
+            );
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid plan date or values.\"}"
+            );
+        }
+    }
+
+
+    private static void updatePlan(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> form =
+                readForm(exchange);
+
+
+        int planID =
+                parseInt(
+                        form.get("planID"),
+                        -1
+                );
+
+
+        int userID =
+                parseInt(
+                        form.get("userID"),
+                        -1
+                );
+
+
+        String date =
+                form.getOrDefault(
+                        "date",
+                        ""
+                );
+
+
+        String description =
+                form.getOrDefault(
+                        "description",
+                        ""
+                ).trim();
+
+
+        double goalAmount =
+                parseDouble(
+                        form.get("goalAmount"),
+                        -1
+                );
+
+
+        double savedAmount =
+                parseDouble(
+                        form.get("savedAmount"),
+                        0
+                );
+
+
+        if (
+                planID <= 0
+                        || userID <= 0
+                        || date.isBlank()
+                        || description.isBlank()
+                        || goalAmount < 0
+                        || savedAmount < 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid planning information.\"}"
+            );
+
+            return;
+        }
+
+
+        try {
+
+            Plan plan =
+                    new Plan(
+                            planID,
+                            userID,
+                            Date.valueOf(date),
+                            description,
+                            goalAmount,
+                            savedAmount
+                    );
+
+
+            PlanDAO dao =
+                    new PlanDAO();
+
+
+            boolean success =
+                    dao.updatePlan(
+                            plan
+                    );
+
+
+            if (!success) {
+
+                sendJson(
+                        exchange,
+                        404,
+                        "{\"success\":false,"
+                                + "\"message\":\"Plan was not found.\"}"
+                );
+
+                return;
+            }
+
+
+            sendJson(
+                    exchange,
+                    200,
+                    "{\"success\":true,"
+                            + "\"message\":\"Plan updated successfully.\"}"
+            );
+
+
+        } catch (Exception e) {
+
+            e.printStackTrace();
+
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Invalid planning values.\"}"
+            );
+        }
+    }
+
+
+    private static void deletePlan(
+            HttpExchange exchange)
+            throws IOException {
+
+        Map<String, String> query =
+                parseQuery(exchange);
+
+
+        int planID =
+                parseInt(
+                        query.get("planID"),
+                        -1
+                );
+
+
+        int userID =
+                parseInt(
+                        query.get("userID"),
+                        -1
+                );
+
+
+        if (
+                planID <= 0
+                        || userID <= 0
+        ) {
+
+            sendJson(
+                    exchange,
+                    400,
+                    "{\"success\":false,"
+                            + "\"message\":\"Valid planID and userID required.\"}"
+            );
+
+            return;
+        }
+
+
+        PlanDAO dao =
+                new PlanDAO();
+
+
+        boolean success =
+                dao.deletePlan(
+                        planID,
+                        userID
+                );
+
+
+        if (!success) {
+
+            sendJson(
+                    exchange,
+                    404,
+                    "{\"success\":false,"
+                            + "\"message\":\"Plan was not found.\"}"
+            );
+
+            return;
+        }
+
+
+        sendJson(
+                exchange,
+                200,
+                "{\"success\":true,"
+                        + "\"message\":\"Plan deleted successfully.\"}"
+        );
+    }
+
 
     // ==================================================
     // REPORTS
@@ -369,32 +2061,38 @@ public class EWalletServer {
             return;
         }
 
-        if (!isGet(exchange)) {
-            sendText(exchange, 405, "GET required");
-            return;
-        }
 
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
+
             sendText(
                     exchange,
                     400,
                     "Valid userID required"
             );
+
             return;
         }
+
 
         IncomeReport report =
                 new IncomeReport();
 
+
         sendText(
                 exchange,
                 200,
-                report.generateReport(userID)
+                report.generateReport(
+                        userID
+                )
         );
     }
+
 
     private static void handleExpenseReport(
             HttpExchange exchange)
@@ -406,32 +2104,38 @@ public class EWalletServer {
             return;
         }
 
-        if (!isGet(exchange)) {
-            sendText(exchange, 405, "GET required");
-            return;
-        }
 
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
+
             sendText(
                     exchange,
                     400,
                     "Valid userID required"
             );
+
             return;
         }
+
 
         ExpenseReport report =
                 new ExpenseReport();
 
+
         sendText(
                 exchange,
                 200,
-                report.generateReport(userID)
+                report.generateReport(
+                        userID
+                )
         );
     }
+
 
     private static void handleFullReport(
             HttpExchange exchange)
@@ -443,35 +2147,41 @@ public class EWalletServer {
             return;
         }
 
-        if (!isGet(exchange)) {
-            sendText(exchange, 405, "GET required");
-            return;
-        }
 
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
+
             sendText(
                     exchange,
                     400,
                     "Valid userID required"
             );
+
             return;
         }
+
 
         FinancialReport report =
                 new FinancialReport();
 
+
         sendText(
                 exchange,
                 200,
-                report.generateReport(userID)
+                report.generateReport(
+                        userID
+                )
         );
     }
 
+
     // ==================================================
-    // CSV EXPORT
+    // CSV EXPORT - INCOME
     // ==================================================
 
     private static void handleIncomeExport(
@@ -484,17 +2194,24 @@ public class EWalletServer {
             return;
         }
 
+
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
+
             sendText(
                     exchange,
                     400,
                     "Valid userID required"
             );
+
             return;
         }
+
 
         Path tempFile =
                 Files.createTempFile(
@@ -502,8 +2219,10 @@ public class EWalletServer {
                         ".csv"
                 );
 
+
         CSVExporter exporter =
                 new CSVExporter();
+
 
         boolean success =
                 exporter.exportIncome(
@@ -511,9 +2230,13 @@ public class EWalletServer {
                         tempFile.toString()
                 );
 
+
         if (!success) {
 
-            Files.deleteIfExists(tempFile);
+            Files.deleteIfExists(
+                    tempFile
+            );
+
 
             sendText(
                     exchange,
@@ -524,12 +2247,18 @@ public class EWalletServer {
             return;
         }
 
+
         sendCSVFile(
                 exchange,
                 tempFile,
                 "income_report.csv"
         );
     }
+
+
+    // ==================================================
+    // CSV EXPORT - EXPENSES
+    // ==================================================
 
     private static void handleExpenseExport(
             HttpExchange exchange)
@@ -541,17 +2270,24 @@ public class EWalletServer {
             return;
         }
 
+
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
+
             sendText(
                     exchange,
                     400,
                     "Valid userID required"
             );
+
             return;
         }
+
 
         Path tempFile =
                 Files.createTempFile(
@@ -559,8 +2295,10 @@ public class EWalletServer {
                         ".csv"
                 );
 
+
         CSVExporter exporter =
                 new CSVExporter();
+
 
         boolean success =
                 exporter.exportExpenses(
@@ -568,9 +2306,13 @@ public class EWalletServer {
                         tempFile.toString()
                 );
 
+
         if (!success) {
 
-            Files.deleteIfExists(tempFile);
+            Files.deleteIfExists(
+                    tempFile
+            );
+
 
             sendText(
                     exchange,
@@ -581,12 +2323,18 @@ public class EWalletServer {
             return;
         }
 
+
         sendCSVFile(
                 exchange,
                 tempFile,
                 "expense_report.csv"
         );
     }
+
+
+    // ==================================================
+    // CSV EXPORT - FULL
+    // ==================================================
 
     private static void handleFullExport(
             HttpExchange exchange)
@@ -598,17 +2346,24 @@ public class EWalletServer {
             return;
         }
 
+
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
+
             sendText(
                     exchange,
                     400,
                     "Valid userID required"
             );
+
             return;
         }
+
 
         Path tempFile =
                 Files.createTempFile(
@@ -616,8 +2371,10 @@ public class EWalletServer {
                         ".csv"
                 );
 
+
         CSVExporter exporter =
                 new CSVExporter();
+
 
         boolean success =
                 exporter.exportFullReport(
@@ -625,18 +2382,23 @@ public class EWalletServer {
                         tempFile.toString()
                 );
 
+
         if (!success) {
 
-            Files.deleteIfExists(tempFile);
+            Files.deleteIfExists(
+                    tempFile
+            );
+
 
             sendText(
                     exchange,
                     500,
-                    "Full report export failed."
+                    "Full export failed."
             );
 
             return;
         }
+
 
         sendCSVFile(
                 exchange,
@@ -644,6 +2406,7 @@ public class EWalletServer {
                 "ewallet_financial_report.csv"
         );
     }
+
 
     // ==================================================
     // CSV IMPORT - INCOME
@@ -659,6 +2422,7 @@ public class EWalletServer {
             return;
         }
 
+
         if (!exchange
                 .getRequestMethod()
                 .equalsIgnoreCase("POST")) {
@@ -667,14 +2431,18 @@ public class EWalletServer {
                     exchange,
                     405,
                     "{\"success\":false,"
-                    + "\"message\":\"POST required\"}"
+                            + "\"message\":\"POST required\"}"
             );
 
             return;
         }
 
+
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
 
@@ -682,11 +2450,12 @@ public class EWalletServer {
                     exchange,
                     400,
                     "{\"success\":false,"
-                    + "\"message\":\"Valid userID required\"}"
+                            + "\"message\":\"Valid userID required\"}"
             );
 
             return;
         }
+
 
         String csvText =
                 new String(
@@ -696,17 +2465,6 @@ public class EWalletServer {
                         StandardCharsets.UTF_8
                 );
 
-        if (csvText.isBlank()) {
-
-            sendJson(
-                    exchange,
-                    400,
-                    "{\"success\":false,"
-                    + "\"message\":\"CSV file was empty\"}"
-            );
-
-            return;
-        }
 
         Path tempFile =
                 Files.createTempFile(
@@ -714,14 +2472,17 @@ public class EWalletServer {
                         ".csv"
                 );
 
+
         Files.writeString(
                 tempFile,
                 csvText,
                 StandardCharsets.UTF_8
         );
 
+
         CSVImporter importer =
                 new CSVImporter();
+
 
         int imported =
                 importer.importIncome(
@@ -729,22 +2490,25 @@ public class EWalletServer {
                         tempFile.toString()
                 );
 
-        Files.deleteIfExists(tempFile);
+
+        Files.deleteIfExists(
+                tempFile
+        );
+
 
         sendJson(
                 exchange,
                 200,
-                "{"
-                + "\"success\":true,"
-                + "\"imported\":"
-                + imported
-                + ","
-                + "\"message\":\""
-                + imported
-                + " income records imported.\""
-                + "}"
+                "{\"success\":true,"
+                        + "\"imported\":"
+                        + imported
+                        + ","
+                        + "\"message\":\""
+                        + imported
+                        + " income records imported.\"}"
         );
     }
+
 
     // ==================================================
     // CSV IMPORT - EXPENSES
@@ -760,6 +2524,7 @@ public class EWalletServer {
             return;
         }
 
+
         if (!exchange
                 .getRequestMethod()
                 .equalsIgnoreCase("POST")) {
@@ -768,14 +2533,18 @@ public class EWalletServer {
                     exchange,
                     405,
                     "{\"success\":false,"
-                    + "\"message\":\"POST required\"}"
+                            + "\"message\":\"POST required\"}"
             );
 
             return;
         }
 
+
         int userID =
-                getUserIDFromQuery(exchange);
+                getUserIDFromQuery(
+                        exchange
+                );
+
 
         if (userID <= 0) {
 
@@ -783,11 +2552,12 @@ public class EWalletServer {
                     exchange,
                     400,
                     "{\"success\":false,"
-                    + "\"message\":\"Valid userID required\"}"
+                            + "\"message\":\"Valid userID required\"}"
             );
 
             return;
         }
+
 
         String csvText =
                 new String(
@@ -797,17 +2567,6 @@ public class EWalletServer {
                         StandardCharsets.UTF_8
                 );
 
-        if (csvText.isBlank()) {
-
-            sendJson(
-                    exchange,
-                    400,
-                    "{\"success\":false,"
-                    + "\"message\":\"CSV file was empty\"}"
-            );
-
-            return;
-        }
 
         Path tempFile =
                 Files.createTempFile(
@@ -815,14 +2574,17 @@ public class EWalletServer {
                         ".csv"
                 );
 
+
         Files.writeString(
                 tempFile,
                 csvText,
                 StandardCharsets.UTF_8
         );
 
+
         CSVImporter importer =
                 new CSVImporter();
+
 
         int imported =
                 importer.importExpenses(
@@ -830,66 +2592,28 @@ public class EWalletServer {
                         tempFile.toString()
                 );
 
-        Files.deleteIfExists(tempFile);
+
+        Files.deleteIfExists(
+                tempFile
+        );
+
 
         sendJson(
                 exchange,
                 200,
-                "{"
-                + "\"success\":true,"
-                + "\"imported\":"
-                + imported
-                + ","
-                + "\"message\":\""
-                + imported
-                + " expense records imported.\""
-                + "}"
+                "{\"success\":true,"
+                        + "\"imported\":"
+                        + imported
+                        + ","
+                        + "\"message\":\""
+                        + imported
+                        + " expense records imported.\"}"
         );
     }
 
-    // ==================================================
-    // SEND CSV FILE
-    // ==================================================
-
-    private static void sendCSVFile(
-            HttpExchange exchange,
-            Path file,
-            String downloadName)
-            throws IOException {
-
-        byte[] data =
-                Files.readAllBytes(file);
-
-        exchange.getResponseHeaders().set(
-                "Content-Type",
-                "text/csv; charset=UTF-8"
-        );
-
-        exchange.getResponseHeaders().set(
-                "Content-Disposition",
-                "attachment; filename=\""
-                + downloadName
-                + "\""
-        );
-
-        exchange.sendResponseHeaders(
-                200,
-                data.length
-        );
-
-        try (
-                OutputStream output =
-                        exchange.getResponseBody()
-        ) {
-
-            output.write(data);
-        }
-
-        Files.deleteIfExists(file);
-    }
 
     // ==================================================
-    // STATIC GUI FILES
+    // STATIC WEBSITE FILES
     // ==================================================
 
     private static void handleStaticFile(
@@ -902,7 +2626,10 @@ public class EWalletServer {
             return;
         }
 
-        if (!isGet(exchange)) {
+
+        if (!exchange
+                .getRequestMethod()
+                .equalsIgnoreCase("GET")) {
 
             sendText(
                     exchange,
@@ -913,6 +2640,7 @@ public class EWalletServer {
             return;
         }
 
+
         String requestPath =
                 URLDecoder.decode(
                         exchange
@@ -921,14 +2649,16 @@ public class EWalletServer {
                         StandardCharsets.UTF_8
                 );
 
+
         if (
                 requestPath.equals("/")
-                || requestPath.isBlank()
+                        || requestPath.isBlank()
         ) {
 
             requestPath =
                     "/index.html";
         }
+
 
         Path file =
                 WEB_ROOT
@@ -937,7 +2667,12 @@ public class EWalletServer {
                         )
                         .normalize();
 
-        if (!file.startsWith(WEB_ROOT)) {
+
+        if (
+                !file.startsWith(
+                        WEB_ROOT
+                )
+        ) {
 
             sendText(
                     exchange,
@@ -948,95 +2683,77 @@ public class EWalletServer {
             return;
         }
 
+
         if (
                 !Files.exists(file)
-                || Files.isDirectory(file)
+                        || Files.isDirectory(file)
         ) {
 
             sendText(
                     exchange,
                     404,
                     "File not found: "
-                    + requestPath
+                            + requestPath
             );
 
             return;
         }
 
-        byte[] data =
-                Files.readAllBytes(file);
 
-        exchange.getResponseHeaders().set(
-                "Content-Type",
-                contentType(file)
-        );
+        byte[] data =
+                Files.readAllBytes(
+                        file
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Content-Type",
+                        contentType(file)
+                );
+
 
         exchange.sendResponseHeaders(
                 200,
                 data.length
         );
 
+
         try (
                 OutputStream output =
                         exchange.getResponseBody()
         ) {
 
-            output.write(data);
+            output.write(
+                    data
+            );
         }
     }
 
+
     // ==================================================
-    // HELPERS
+    // FORM / QUERY HELPERS
     // ==================================================
 
-    private static boolean isGet(
-            HttpExchange exchange) {
+    private static Map<String, String> readForm(
+            HttpExchange exchange)
+            throws IOException {
 
-        return exchange
-                .getRequestMethod()
-                .equalsIgnoreCase("GET");
+        String body =
+                new String(
+                        exchange
+                                .getRequestBody()
+                                .readAllBytes(),
+                        StandardCharsets.UTF_8
+                );
+
+
+        return parseForm(
+                body
+        );
     }
 
-    private static int getUserIDFromQuery(
-            HttpExchange exchange) {
-
-        try {
-
-            String query =
-                    exchange
-                            .getRequestURI()
-                            .getQuery();
-
-            if (query == null) {
-                return -1;
-            }
-
-            String[] parts =
-                    query.split("&");
-
-            for (String part : parts) {
-
-                String[] pair =
-                        part.split("=", 2);
-
-                if (
-                        pair.length == 2
-                        && pair[0].equals("userID")
-                ) {
-
-                    return Integer.parseInt(
-                            pair[1]
-                    );
-                }
-            }
-
-        } catch (Exception e) {
-
-            return -1;
-        }
-
-        return -1;
-    }
 
     private static Map<String, String> parseForm(
             String body) {
@@ -1044,27 +2761,35 @@ public class EWalletServer {
         Map<String, String> values =
                 new HashMap<>();
 
+
         if (
                 body == null
-                || body.isBlank()
+                        || body.isBlank()
         ) {
 
             return values;
         }
 
+
         String[] parts =
                 body.split("&");
+
 
         for (String part : parts) {
 
             String[] pair =
-                    part.split("=", 2);
+                    part.split(
+                            "=",
+                            2
+                    );
+
 
             String key =
                     URLDecoder.decode(
                             pair[0],
                             StandardCharsets.UTF_8
                     );
+
 
             String value =
                     pair.length > 1
@@ -1074,14 +2799,112 @@ public class EWalletServer {
                             )
                             : "";
 
+
             values.put(
                     key,
                     value
             );
         }
 
+
         return values;
     }
+
+
+    private static Map<String, String> parseQuery(
+            HttpExchange exchange) {
+
+        Map<String, String> values =
+                new HashMap<>();
+
+
+        String query =
+                exchange
+                        .getRequestURI()
+                        .getQuery();
+
+
+        if (
+                query == null
+                        || query.isBlank()
+        ) {
+
+            return values;
+        }
+
+
+        String[] parts =
+                query.split("&");
+
+
+        for (String part : parts) {
+
+            String[] pair =
+                    part.split(
+                            "=",
+                            2
+                    );
+
+
+            String key =
+                    URLDecoder.decode(
+                            pair[0],
+                            StandardCharsets.UTF_8
+                    );
+
+
+            String value =
+                    pair.length > 1
+                            ? URLDecoder.decode(
+                                    pair[1],
+                                    StandardCharsets.UTF_8
+                            )
+                            : "";
+
+
+            values.put(
+                    key,
+                    value
+            );
+        }
+
+
+        return values;
+    }
+
+
+    private static int getUserIDFromQuery(
+            HttpExchange exchange) {
+
+        Map<String, String> query =
+                parseQuery(
+                        exchange
+                );
+
+
+        return parseInt(
+                query.get("userID"),
+                -1
+        );
+    }
+
+
+    private static int parseInt(
+            String value,
+            int fallback) {
+
+        try {
+
+            return Integer.parseInt(
+                    value
+            );
+
+        } catch (Exception e) {
+
+            return fallback;
+        }
+    }
+
 
     private static double parseDouble(
             String value,
@@ -1089,13 +2912,16 @@ public class EWalletServer {
 
         try {
 
-            return Double.parseDouble(value);
+            return Double.parseDouble(
+                    value
+            );
 
         } catch (Exception e) {
 
             return fallback;
         }
     }
+
 
     private static String escapeJson(
             String value) {
@@ -1104,55 +2930,148 @@ public class EWalletServer {
             return "";
         }
 
+
         return value
-                .replace("\\", "\\\\")
-                .replace("\"", "\\\"");
+                .replace(
+                        "\\",
+                        "\\\\"
+                )
+                .replace(
+                        "\"",
+                        "\\\""
+                )
+                .replace(
+                        "\n",
+                        "\\n"
+                )
+                .replace(
+                        "\r",
+                        "\\r"
+                );
     }
+
+
+    // ==================================================
+    // HTTP HELPERS
+    // ==================================================
 
     private static boolean handleOptions(
             HttpExchange exchange)
             throws IOException {
 
-        if (exchange
-                .getRequestMethod()
-                .equalsIgnoreCase("OPTIONS")) {
+        if (
+                exchange
+                        .getRequestMethod()
+                        .equalsIgnoreCase(
+                                "OPTIONS"
+                        )
+        ) {
 
             exchange.sendResponseHeaders(
                     204,
                     -1
             );
 
+
             exchange.close();
+
 
             return true;
         }
 
+
         return false;
     }
+
 
     private static void addCorsHeaders(
             HttpExchange exchange) {
 
-        exchange.getResponseHeaders().set(
-                "Access-Control-Allow-Origin",
-                "*"
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Access-Control-Allow-Origin",
+                        "*"
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Access-Control-Allow-Methods",
+                        "GET, POST, PUT, DELETE, OPTIONS"
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Access-Control-Allow-Headers",
+                        "Content-Type"
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Cache-Control",
+                        "no-store"
+                );
+    }
+
+
+    private static void sendCSVFile(
+            HttpExchange exchange,
+            Path file,
+            String downloadName)
+            throws IOException {
+
+        byte[] data =
+                Files.readAllBytes(
+                        file
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Content-Type",
+                        "text/csv; charset=UTF-8"
+                );
+
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Content-Disposition",
+                        "attachment; filename=\""
+                                + downloadName
+                                + "\""
+                );
+
+
+        exchange.sendResponseHeaders(
+                200,
+                data.length
         );
 
-        exchange.getResponseHeaders().set(
-                "Access-Control-Allow-Methods",
-                "GET, POST, PUT, DELETE, OPTIONS"
-        );
 
-        exchange.getResponseHeaders().set(
-                "Access-Control-Allow-Headers",
-                "Content-Type"
-        );
+        try (
+                OutputStream output =
+                        exchange.getResponseBody()
+        ) {
 
-        exchange.getResponseHeaders().set(
-                "Cache-Control",
-                "no-store"
+            output.write(
+                    data
+            );
+        }
+
+
+        Files.deleteIfExists(
+                file
         );
     }
+
 
     private static void sendJson(
             HttpExchange exchange,
@@ -1165,24 +3084,32 @@ public class EWalletServer {
                         StandardCharsets.UTF_8
                 );
 
-        exchange.getResponseHeaders().set(
-                "Content-Type",
-                "application/json; charset=UTF-8"
-        );
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Content-Type",
+                        "application/json; charset=UTF-8"
+                );
+
 
         exchange.sendResponseHeaders(
                 status,
                 bytes.length
         );
 
+
         try (
                 OutputStream output =
                         exchange.getResponseBody()
         ) {
 
-            output.write(bytes);
+            output.write(
+                    bytes
+            );
         }
     }
+
 
     private static void sendText(
             HttpExchange exchange,
@@ -1195,24 +3122,32 @@ public class EWalletServer {
                         StandardCharsets.UTF_8
                 );
 
-        exchange.getResponseHeaders().set(
-                "Content-Type",
-                "text/plain; charset=UTF-8"
-        );
+
+        exchange
+                .getResponseHeaders()
+                .set(
+                        "Content-Type",
+                        "text/plain; charset=UTF-8"
+                );
+
 
         exchange.sendResponseHeaders(
                 status,
                 bytes.length
         );
 
+
         try (
                 OutputStream output =
                         exchange.getResponseBody()
         ) {
 
-            output.write(bytes);
+            output.write(
+                    bytes
+            );
         }
     }
+
 
     private static String contentType(
             Path file) {
@@ -1223,44 +3158,54 @@ public class EWalletServer {
                         .toString()
                         .toLowerCase();
 
+
         if (name.endsWith(".html")) {
             return "text/html; charset=UTF-8";
         }
+
 
         if (name.endsWith(".css")) {
             return "text/css; charset=UTF-8";
         }
 
+
         if (name.endsWith(".js")) {
             return "text/javascript; charset=UTF-8";
         }
+
 
         if (name.endsWith(".csv")) {
             return "text/csv; charset=UTF-8";
         }
 
+
         if (name.endsWith(".png")) {
             return "image/png";
         }
 
+
         if (
                 name.endsWith(".jpg")
-                || name.endsWith(".jpeg")
+                        || name.endsWith(".jpeg")
         ) {
             return "image/jpeg";
         }
+
 
         if (name.endsWith(".gif")) {
             return "image/gif";
         }
 
+
         if (name.endsWith(".svg")) {
             return "image/svg+xml";
         }
 
+
         if (name.endsWith(".ico")) {
             return "image/x-icon";
         }
+
 
         return "application/octet-stream";
     }

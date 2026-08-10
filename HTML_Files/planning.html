@@ -1,117 +1,387 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="icon" type="image/png" href="../Pictures/appLogo.png">
-    <link rel="stylesheet" href="../CSS_Files/styles.css">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="../Pictures/appLogo.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../CSS_Files/styles.css"
+    >
+
     <title>EWallet Planning</title>
 </head>
-<body>
-    <a href="../index.html" class="app-logo-link" aria-label="Return to Main Page"></a>
-    <img src="../Pictures/appIcon.png" alt="EWallet Logo" class="app-logo-icon">
-    <header id="intro">
-        <h1 class = "title">EWallet Planning</h1>
 
-        <h2>
-            <img src = "../Pictures/usernameIcon.png" alt = "Username Icon" id = "usernameIcon">
+<body>
+
+<header id="intro">
+
+    <h1 class="title">
+        EWallet Planning
+    </h1>
+
+    <h2>
+        <img
+            src="../Pictures/usernameIcon.png"
+            alt="Username Icon"
+            id="usernameIcon"
+        >
+
+        <span class="username-text">
             (Username)
+        </span>
+    </h2>
+
+
+    <div id="optionButtons">
+
+        <button
+            id="incomeButton"
+            type="button"
+            onclick="window.location.href='income.html'">
+
+            <h2>Income</h2>
+        </button>
+
+
+        <button
+            id="expenseButton"
+            type="button"
+            onclick="window.location.href='expenses.html'">
+
+            <h2>Expenses</h2>
+        </button>
+
+
+        <button
+            id="mainPageButton"
+            type="button"
+            onclick="window.location.href='../index.html'">
+
+            <h2>Main Page</h2>
+        </button>
+
+
+        <button
+            id="summaryButton"
+            type="button"
+            onclick="window.location.href='financialSummary.html'">
+
+            <h2>Summary</h2>
+        </button>
+
+    </div>
+
+</header>
+
+
+<main>
+
+    <section
+        id="planningSummary"
+        aria-labelledby="planningHeading">
+
+        <h2
+            class="title"
+            id="planningHeading">
+
+            Planning
+
         </h2>
 
-        <div id = "optionButtons">
-            <button id = "incomeButton" onclick = "window.location.href = 'income.html'"><h2>Income</h2></button>
-            <button id = "expenseButton" onclick = "window.location.href = 'expenses.html'"><h2>Expenses</h2></button>
-            <button id = "mainPageButton" onclick = "window.location.href = '../index.html'"><h2>Main Page</h2></button>
-            <button id = "summaryButton" onclick = "window.location.href = 'financialSummary.html'"><h2>Summary</h2></button>
+
+        <img
+            src="../Pictures/PawPrints.png"
+            alt=""
+            role="presentation"
+            id="pawPrints6"
+        >
+
+        <img
+            src="../Pictures/PawPrints.png"
+            alt=""
+            role="presentation"
+            id="pawPrints7"
+        >
+
+
+        <div class="summary-container">
+
+
+            <div
+                id="currentGoal"
+                class="planning-box">
+
+                <label
+                    for="goalAmount"
+                    class="summary-label">
+
+                    Current Goal ($):
+
+                </label>
+
+                <input
+                    type="number"
+                    id="goalAmount"
+                    name="goalAmount"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                >
+
+            </div>
+
+
+            <div
+                class="planning-box"
+                style="border-left: 5px solid #525B76;">
+
+                <p class="summary-label">
+                    Total Savings:
+                </p>
+
+                <h3
+                    class="money-amount"
+                    id="totalSavedAmountDisplay"
+                    style="color: #525B76;">
+
+                    $0.00
+
+                </h3>
+
+            </div>
+
+
+            <div class="planning-box">
+
+                <p class="summary-label">
+                    Total Planned:
+                </p>
+
+                <h3
+                    class="money-amount"
+                    id="totalPlanningAmountDisplay">
+
+                    $0.00
+
+                </h3>
+
+            </div>
+
+
+            <div class="planning-box">
+
+                <p class="summary-label">
+                    Added This Month:
+                </p>
+
+                <h3
+                    class="money-amount"
+                    id="monthPlanningAmountDisplay">
+
+                    $0.00
+
+                </h3>
+
+            </div>
+
+
+            <div class="planning-box">
+
+                <p class="summary-label">
+                    Remaining Until Goal:
+                </p>
+
+                <h3
+                    class="money-amount"
+                    id="remainingTillGoalDisplay">
+
+                    $0.00
+
+                </h3>
+
+            </div>
+
         </div>
-    </header>
 
-    <main>
-        <section id="planningSummary" aria-labelledby="planningHeading">
-            <h2 class="title" id="planningHeading">Planning</h2>
+    </section>
 
-            <img src="../Pictures/PawPrints.png" alt="" role="presentation" id="pawPrints6">
-            <img src="../Pictures/PawPrints.png" alt="" role="presentation" id="pawPrints7">
 
-            <div class="summary-container">
-                <div id="currentGoal" class="planning-box">
-                    <label for="goalAmount" class="summary-label">Current Goal ($):</label>
-                    <input type="number" id="goalAmount" name="goalAmount" placeholder="0.00" step="0.01" min="0" required>
-                </div>
+    <section
+        id="planningFormSection"
+        aria-labelledby="formHeading">
 
-                <div class="planning-box" style="border-left: 5px solid #525B76;">
-                    <p class="summary-label">Total Savings:</p> 
-                    <h3 class="money-amount" id="totalSavedAmountDisplay" style="color: #525B76;">$0.00</h3>
-                </div>
+        <h2
+            class="title"
+            id="formHeading">
 
-                <div class="planning-box">
-                    <p class="summary-label">Total Planned:</p> 
-                    <h3 class="money-amount" id="totalPlanningAmountDisplay">$0.00</h3>
-                </div>
+            Plan Future Purchase
 
-                <div class="planning-box">
-                    <p class="summary-label">Added This Month:</p>
-                    <h3 class="money-amount" id="monthPlanningAmountDisplay">$0.00</h3>
-                </div>
+        </h2>
 
-                <div class="planning-box">
-                    <p class="summary-label">Remaining Until Goal:</p>
-                    <h3 class="money-amount" id="remainingTillGoalDisplay">$0.00</h3>
-                </div>
+
+        <form id="planningForm">
+
+
+            <div class="form-group">
+
+                <label for="planningDate">
+                    Target Date:
+                </label>
+
+                <input
+                    type="date"
+                    id="planningDate"
+                    name="date"
+                    required
+                >
+
             </div>
-        </section>
 
-        <!-- Create / Modify Planned Purchases -->
-        <section id="planningFormSection" aria-labelledby="formHeading">
-            <h2 class="title" id="formHeading">Plan Future Purchase</h2>
-            
-            <form id="planningForm">
-                <div class="form-group">
-                    <label for="planningDate">Target Date:</label>
-                    <input type="date" id="planningDate" name="date" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="planningDescription">Description / Item:</label>
-                    <input type="text" id="planningDescription" name="description" placeholder="Laptop, Car Insurance, etc." required>
-                </div>
 
-                <div class="form-group">
-                    <label for="planningSavedAmount">Amount Saved So Far:</label>
-                    <input type="number" id="planningSavedAmount" name="savedAmount" placeholder="0.00" value="0.00" step="0.01" min="0" required>
-                </div>
+            <div class="form-group">
 
-                <div class="form-group">
-                    <label for="planningAmount">Estimated Amount:</label>
-                    <input type="number" id="planningAmount" name="amount" placeholder="0.00" step="0.01" min="0" required>
-                </div>
+                <label for="planningDescription">
+                    Description / Item:
+                </label>
 
-                <button type="submit" id="submitPlanBtn">Create Plan</button>
-            </form>
-        </section>
+                <input
+                    type="text"
+                    id="planningDescription"
+                    name="description"
+                    placeholder="Laptop, Car Insurance, etc."
+                    required
+                >
 
-        <!-- View / Modify / Delete Planned Purchases Table -->
-        <section id="planningEntries" aria-labelledby="entriesHeading">
-            <h2 class="title" id="entriesHeading">Planned Future Purchases</h2>
-
-            <div class="table-responsive">
-                <table>
-                    <thead>
-                        <tr>
-                            <th scope="col">Target Date</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">Amount Saved</th>
-                            <th scope="col">Estimated Amount</th>
-                            <th scope="col">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="planningEntriesTableBody">
-                    </tbody>
-                </table>
             </div>
-        </section>
-    </main>
 
-    <script type="module" src="../app.js"></script>
+
+            <div class="form-group">
+
+                <label for="planningSavedAmount">
+                    Amount Saved So Far:
+                </label>
+
+                <input
+                    type="number"
+                    id="planningSavedAmount"
+                    name="savedAmount"
+                    placeholder="0.00"
+                    value="0.00"
+                    step="0.01"
+                    min="0"
+                    required
+                >
+
+            </div>
+
+
+            <div class="form-group">
+
+                <label for="planningAmount">
+                    Estimated Amount:
+                </label>
+
+                <input
+                    type="number"
+                    id="planningAmount"
+                    name="amount"
+                    placeholder="0.00"
+                    step="0.01"
+                    min="0"
+                    required
+                >
+
+            </div>
+
+
+            <button
+                type="submit"
+                id="submitPlanBtn">
+
+                Create Plan
+
+            </button>
+
+        </form>
+
+    </section>
+
+
+    <section
+        id="planningEntries"
+        aria-labelledby="entriesHeading">
+
+        <h2
+            class="title"
+            id="entriesHeading">
+
+            Planned Future Purchases
+
+        </h2>
+
+
+        <div class="table-responsive">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+
+                        <th scope="col">
+                            Target Date
+                        </th>
+
+                        <th scope="col">
+                            Description
+                        </th>
+
+                        <th scope="col">
+                            Amount Saved
+                        </th>
+
+                        <th scope="col">
+                            Estimated Amount
+                        </th>
+
+                        <th scope="col">
+                            Actions
+                        </th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody id="planningEntriesTableBody">
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</main>
+
+
+<script
+    type="module"
+    src="../planning.js">
+</script>
+
 </body>
+
 </html>

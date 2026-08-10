@@ -1,30 +1,26 @@
 import {
     appState,
     loadAppState
-} from '../variables.js';
+} from './variables.js';
+
+
+let expenseRecords = [];
+
+let editingExpenseID = null;
 
 
 /*
  * ==================================================
- * INCOME PAGE STATE
- * ==================================================
- */
-
-let incomeRecords = [];
-
-let editingIncomeID = null;
-
-
-/*
- * ==================================================
- * HELPER FUNCTIONS
+ * HELPERS
  * ==================================================
  */
 
 function escapeHTML(value) {
 
-    if (value === null ||
-        value === undefined) {
+    if (
+        value === null ||
+        value === undefined
+    ) {
 
         return '';
     }
@@ -42,10 +38,6 @@ function escapeHTML(value) {
 }
 
 
-/*
- * Get the UserID that was saved
- * when the user logged in.
- */
 function getCurrentUserID() {
 
     const sessionID =
@@ -74,66 +66,10 @@ function getCurrentUserID() {
     }
 
 
-    /*
-     * Fallback in case app.js stored
-     * the user information in appState.
-     */
-    if (appState.userID) {
-
-        return Number(
-            appState.userID
-        );
-    }
-
-
     return null;
 }
 
 
-/*
- * Get username for the header.
- */
-function getCurrentUsername() {
-
-    const sessionUsername =
-        sessionStorage.getItem(
-            'ewallet_username'
-        );
-
-    if (sessionUsername) {
-
-        return sessionUsername;
-    }
-
-
-    const localUsername =
-        localStorage.getItem(
-            'ewallet_username'
-        );
-
-    if (localUsername) {
-
-        return localUsername;
-    }
-
-
-    if (
-        appState.username &&
-        appState.username !== '(Username)'
-    ) {
-
-        return appState.username;
-    }
-
-
-    return '(Username)';
-}
-
-
-/*
- * Convert the frequency number stored
- * in Derby into readable text.
- */
 function getFrequencyLabel(
     frequency
 ) {
@@ -168,7 +104,7 @@ function getFrequencyLabel(
 
 /*
  * ==================================================
- * USERNAME DISPLAY
+ * USERNAME
  * ==================================================
  */
 
@@ -181,23 +117,29 @@ function displayUsername() {
 
 
     if (!usernameElement) {
-
         return;
     }
 
 
-    usernameElement.textContent =
-        getCurrentUsername();
+    if (
+        appState.username &&
+        appState.username !==
+            '(Username)'
+    ) {
+
+        usernameElement.textContent =
+            appState.username;
+    }
 }
 
 
 /*
  * ==================================================
- * LOAD INCOME FROM DERBY
+ * LOAD EXPENSES FROM DERBY
  * ==================================================
  */
 
-async function loadIncomeFromDatabase() {
+async function loadExpensesFromDatabase() {
 
     const userID =
         getCurrentUserID();
@@ -205,12 +147,8 @@ async function loadIncomeFromDatabase() {
 
     if (!userID) {
 
-        console.error(
-            'No logged-in UserID was found.'
-        );
-
         alert(
-            'Your login session could not be found. Please log in again.'
+            'Please log in again.'
         );
 
         window.location.href =
@@ -224,7 +162,7 @@ async function loadIncomeFromDatabase() {
 
         const response =
             await fetch(
-                '/api/income?userID=' +
+                '/api/expenses?userID=' +
                 encodeURIComponent(
                     userID
                 )
@@ -235,53 +173,41 @@ async function loadIncomeFromDatabase() {
             await response.json();
 
 
-        if (!response.ok) {
-
-            throw new Error(
-                result.message ||
-                'Could not load income.'
-            );
-        }
-
-
-        if (!result.success) {
-
-            throw new Error(
-                result.message ||
-                'Could not load income.'
-            );
-        }
-
-
         if (
-            Array.isArray(
-                result.income
-            )
+            !response.ok ||
+            !result.success
         ) {
 
-            incomeRecords =
-                result.income;
-
-        } else {
-
-            incomeRecords = [];
+            throw new Error(
+                result.message ||
+                'Could not load expenses.'
+            );
         }
 
 
-        renderIncomeEntries();
+        expenseRecords =
+            Array.isArray(
+                result.expenses
+            )
+                ? result.expenses
+                : [];
 
-        updateIncomeDisplay();
+
+        renderExpenseEntries();
+
+        updateExpenseSummary();
 
 
     } catch (error) {
 
         console.error(
-            'Income load error:',
+            'Expense load error:',
             error
         );
 
+
         alert(
-            'Could not load income from the EWallet database.'
+            'Could not load expenses from the EWallet database.'
         );
     }
 }
@@ -289,40 +215,46 @@ async function loadIncomeFromDatabase() {
 
 /*
  * ==================================================
- * YEARLY INCOME TOTAL
+ * SUMMARY TOTALS
  * ==================================================
  */
 
-function updateIncomeDisplay() {
+function updateExpenseSummary() {
 
-    const display =
+    const monthDisplay =
         document.getElementById(
-            'incomeDisplay'
+            'monthAmountDisplay'
         );
 
 
-    if (!display) {
+    const totalDisplay =
+        document.getElementById(
+            'totalAmountDisplay'
+        );
 
-        return;
-    }
 
-
-    const yearlyIncome =
-        incomeRecords.reduce(
+    /*
+     * Convert each recurring expense
+     * into a monthly estimate.
+     *
+     * amount × yearly frequency ÷ 12
+     */
+    const monthlyExpenses =
+        expenseRecords.reduce(
             (
                 total,
-                income
+                expense
             ) => {
 
                 const amount =
                     Number(
-                        income.amount
+                        expense.amount
                     ) || 0;
 
 
                 const frequency =
                     Number(
-                        income.frequency
+                        expense.frequency
                     ) || 1;
 
 
@@ -330,7 +262,8 @@ function updateIncomeDisplay() {
                     total +
                     (
                         amount *
-                        frequency
+                        frequency /
+                        12
                     )
                 );
             },
@@ -338,42 +271,69 @@ function updateIncomeDisplay() {
         );
 
 
-    display.textContent =
-        '$' +
-        yearlyIncome.toFixed(2);
+    if (monthDisplay) {
+
+        monthDisplay.textContent =
+            '$' +
+            monthlyExpenses.toFixed(2);
+    }
+
+
+    /*
+     * This keeps the existing GUI field.
+     *
+     * We will later connect summary
+     * balances completely to Derby.
+     */
+    if (totalDisplay) {
+
+        const baseIncome =
+            Number(
+                localStorage.getItem(
+                    'ewallet_baseIncome'
+                )
+            ) || 0;
+
+
+        totalDisplay.textContent =
+            '$' +
+            baseIncome.toFixed(2);
+    }
 }
 
 
 /*
  * ==================================================
- * DISPLAY INCOME TABLE
+ * RENDER TABLE
  * ==================================================
  */
 
-function renderIncomeEntries() {
+function renderExpenseEntries() {
 
     const tableBody =
         document.getElementById(
-            'incomeEntries'
+            'expenseEntriesTableBody'
         );
 
 
     if (!tableBody) {
 
         console.error(
-            'incomeEntries table body was not found.'
+            'Expense table body was not found.'
         );
 
         return;
     }
 
 
-    if (incomeRecords.length === 0) {
+    if (
+        expenseRecords.length === 0
+    ) {
 
         tableBody.innerHTML = `
             <tr>
-                <td colspan="6">
-                    No income entries found.
+                <td colspan="7">
+                    No expense entries found.
                 </td>
             </tr>
         `;
@@ -383,33 +343,39 @@ function renderIncomeEntries() {
 
 
     tableBody.innerHTML =
-        incomeRecords.map(
-            income => {
+        expenseRecords.map(
+            expense => {
 
-                const incomeID =
+                const expenseID =
                     Number(
-                        income.incomeID
+                        expense.expenseID
                     );
 
 
                 const amount =
                     Number(
-                        income.amount
+                        expense.amount
                     ) || 0;
 
 
                 return `
-                    <tr data-id="${incomeID}">
+                    <tr data-id="${expenseID}">
 
                         <td>
                             ${escapeHTML(
-                                income.date
+                                expense.date
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                income.source
+                                expense.source
+                            )}
+                        </td>
+
+                        <td>
+                            ${escapeHTML(
+                                expense.category
                             )}
                         </td>
 
@@ -420,14 +386,14 @@ function renderIncomeEntries() {
                         <td>
                             ${escapeHTML(
                                 getFrequencyLabel(
-                                    income.frequency
+                                    expense.frequency
                                 )
                             )}
                         </td>
 
                         <td>
                             ${escapeHTML(
-                                income.notes
+                                expense.notes
                             )}
                         </td>
 
@@ -436,17 +402,16 @@ function renderIncomeEntries() {
                             <button
                                 type="button"
                                 class="editBtn"
-                                data-id="${incomeID}">
+                                data-id="${expenseID}">
 
                                 Edit
 
                             </button>
 
-
                             <button
                                 type="button"
                                 class="deleteBtn"
-                                data-id="${incomeID}">
+                                data-id="${expenseID}">
 
                                 Delete
 
@@ -463,25 +428,14 @@ function renderIncomeEntries() {
 
 /*
  * ==================================================
- * ADD OR UPDATE INCOME
+ * ADD / UPDATE
  * ==================================================
  */
 
-async function submitIncome(
+async function submitExpense(
     event
 ) {
 
-    /*
-     * VERY IMPORTANT:
-     *
-     * This prevents the browser from
-     * performing a normal HTML form
-     * submission.
-     *
-     * Without this, the server receives
-     * a GET request and displays
-     * "GET required".
-     */
     event.preventDefault();
 
 
@@ -492,70 +446,64 @@ async function submitIncome(
     if (!userID) {
 
         alert(
-            'Please log in before adding income.'
+            'Please log in first.'
         );
-
-        window.location.href =
-            '../index.html';
 
         return;
     }
 
 
-    /*
-     * Find every form element.
-     */
     const dateInput =
         document.getElementById(
-            'incomeDate'
+            'expensesDate'
         );
+
 
     const sourceInput =
         document.getElementById(
-            'incomeSource'
+            'expensesSource'
         );
+
 
     const amountInput =
         document.getElementById(
-            'incomeAmount'
+            'expensesAmount'
         );
+
 
     const frequencyInput =
         document.getElementById(
-            'incomeFrequency'
+            'expensesFrequency'
         );
+
+
+    const categoryInput =
+        document.getElementById(
+            'expensesCategory'
+        );
+
 
     const notesInput =
         document.getElementById(
-            'incomeNotes'
+            'expensesNotes'
         );
 
 
-    /*
-     * Make sure the HTML and JS
-     * actually match.
-     */
     if (
         !dateInput ||
         !sourceInput ||
         !amountInput ||
         !frequencyInput ||
+        !categoryInput ||
         !notesInput
     ) {
 
         console.error(
-            'One or more Income form fields were not found.',
-            {
-                dateInput,
-                sourceInput,
-                amountInput,
-                frequencyInput,
-                notesInput
-            }
+            'One or more Expense fields are missing.'
         );
 
         alert(
-            'The Income form could not be loaded correctly.'
+            'The Expense form could not be loaded correctly.'
         );
 
         return;
@@ -582,6 +530,10 @@ async function submitIncome(
         ) || 1;
 
 
+    const category =
+        categoryInput.value;
+
+
     const notes =
         notesInput.value.trim();
 
@@ -599,7 +551,7 @@ async function submitIncome(
     if (!source) {
 
         alert(
-            'Please enter an income source.'
+            'Please enter an expense source.'
         );
 
         return;
@@ -612,17 +564,13 @@ async function submitIncome(
     ) {
 
         alert(
-            'Please enter a valid income amount.'
+            'Please enter a valid amount.'
         );
 
         return;
     }
 
 
-    /*
-     * Build the information sent
-     * to EWalletServer.java.
-     */
     const formData =
         new URLSearchParams();
 
@@ -658,32 +606,33 @@ async function submitIncome(
 
 
     formData.append(
+        'category',
+        category
+    );
+
+
+    formData.append(
         'notes',
         notes
     );
 
 
-    /*
-     * No editing ID means INSERT.
-     *
-     * An editing ID means UPDATE.
-     */
-    let requestMethod =
+    let method =
         'POST';
 
 
     if (
-        editingIncomeID !== null
+        editingExpenseID !== null
     ) {
 
-        requestMethod =
+        method =
             'PUT';
 
 
         formData.append(
-            'incomeID',
+            'expenseID',
             String(
-                editingIncomeID
+                editingExpenseID
             )
         );
     }
@@ -693,10 +642,10 @@ async function submitIncome(
 
         const response =
             await fetch(
-                '/api/income',
+                '/api/expenses',
                 {
                     method:
-                        requestMethod,
+                        method,
 
                     headers: {
 
@@ -710,106 +659,68 @@ async function submitIncome(
             );
 
 
-        let result;
+        const result =
+            await response.json();
 
 
-        try {
-
-            result =
-                await response.json();
-
-        } catch (jsonError) {
-
-            const text =
-                await response.text();
-
-            throw new Error(
-                text ||
-                'The server returned an invalid response.'
-            );
-        }
-
-
-        if (!response.ok) {
+        if (
+            !response.ok ||
+            !result.success
+        ) {
 
             throw new Error(
                 result.message ||
-                'Income could not be saved.'
+                'Expense could not be saved.'
             );
         }
 
 
-        if (!result.success) {
-
-            throw new Error(
-                result.message ||
-                'Income could not be saved.'
-            );
-        }
-
-
-        /*
-         * Reset editing state.
-         */
-        editingIncomeID =
+        editingExpenseID =
             null;
 
 
-        const addButton =
+        const submitButton =
             document.getElementById(
-                'addBtn'
+                'submitBtn'
             );
 
 
-        if (addButton) {
+        if (submitButton) {
 
-            addButton.textContent =
-                'Add Income';
+            submitButton.textContent =
+                'Add Expense';
         }
 
 
-        /*
-         * Clear the form.
-         */
-        const incomeForm =
+        const form =
             document.getElementById(
-                'incomeForm'
+                'expenseForm'
             );
 
 
-        if (incomeForm) {
+        if (form) {
 
-            incomeForm.reset();
+            form.reset();
         }
 
 
-        /*
-         * Put frequency back at
-         * its default.
-         */
         frequencyInput.value =
             '1';
 
 
-        /*
-         * Reload from Derby.
-         *
-         * This proves the displayed
-         * information came from the DB.
-         */
-        await loadIncomeFromDatabase();
+        await loadExpensesFromDatabase();
 
 
     } catch (error) {
 
         console.error(
-            'Income save error:',
+            'Expense save error:',
             error
         );
 
 
         alert(
-            'Could not save income: ' +
+            'Could not save expense: ' +
             error.message
         );
     }
@@ -818,123 +729,94 @@ async function submitIncome(
 
 /*
  * ==================================================
- * EDIT INCOME
+ * EDIT
  * ==================================================
  */
 
-function beginEditIncome(
-    incomeID
+function beginEditExpense(
+    expenseID
 ) {
 
-    const income =
-        incomeRecords.find(
+    const expense =
+        expenseRecords.find(
             record =>
                 Number(
-                    record.incomeID
+                    record.expenseID
                 ) ===
                 Number(
-                    incomeID
+                    expenseID
                 )
         );
 
 
-    if (!income) {
+    if (!expense) {
 
         alert(
-            'That income entry could not be found.'
+            'Expense could not be found.'
         );
 
         return;
     }
 
 
-    const dateInput =
-        document.getElementById(
-            'incomeDate'
-        );
-
-    const sourceInput =
-        document.getElementById(
-            'incomeSource'
-        );
-
-    const amountInput =
-        document.getElementById(
-            'incomeAmount'
-        );
-
-    const frequencyInput =
-        document.getElementById(
-            'incomeFrequency'
-        );
-
-    const notesInput =
-        document.getElementById(
-            'incomeNotes'
-        );
+    document.getElementById(
+        'expensesDate'
+    ).value =
+        expense.date || '';
 
 
-    if (
-        !dateInput ||
-        !sourceInput ||
-        !amountInput ||
-        !frequencyInput ||
-        !notesInput
-    ) {
-
-        alert(
-            'The Income form could not be loaded correctly.'
-        );
-
-        return;
-    }
+    document.getElementById(
+        'expensesSource'
+    ).value =
+        expense.source || '';
 
 
-    dateInput.value =
-        income.date || '';
+    document.getElementById(
+        'expensesAmount'
+    ).value =
+        expense.amount || '';
 
 
-    sourceInput.value =
-        income.source || '';
-
-
-    amountInput.value =
-        income.amount || '';
-
-
-    frequencyInput.value =
+    document.getElementById(
+        'expensesFrequency'
+    ).value =
         String(
-            income.frequency || 1
+            expense.frequency || 1
         );
 
 
-    notesInput.value =
-        income.notes || '';
+    document.getElementById(
+        'expensesCategory'
+    ).value =
+        expense.category ||
+        'General';
 
 
-    editingIncomeID =
+    document.getElementById(
+        'expensesNotes'
+    ).value =
+        expense.notes || '';
+
+
+    editingExpenseID =
         Number(
-            income.incomeID
+            expense.expenseID
         );
 
 
-    const addButton =
+    const submitButton =
         document.getElementById(
-            'addBtn'
+            'submitBtn'
         );
 
 
-    if (addButton) {
+    if (submitButton) {
 
-        addButton.textContent =
-            'Update Income';
+        submitButton.textContent =
+            'Update Expense';
     }
 
 
-    /*
-     * Move back toward the form
-     * so the user can edit it.
-     */
     window.scrollTo({
         top: 0,
         behavior: 'smooth'
@@ -944,12 +826,12 @@ function beginEditIncome(
 
 /*
  * ==================================================
- * DELETE INCOME
+ * DELETE
  * ==================================================
  */
 
-async function deleteIncome(
-    incomeID
+async function deleteExpense(
+    expenseID
 ) {
 
     const userID =
@@ -958,17 +840,13 @@ async function deleteIncome(
 
     if (!userID) {
 
-        alert(
-            'Please log in first.'
-        );
-
         return;
     }
 
 
     const confirmed =
         window.confirm(
-            'Are you sure you want to delete this income entry?'
+            'Are you sure you want to delete this expense?'
         );
 
 
@@ -981,14 +859,14 @@ async function deleteIncome(
     try {
 
         const url =
-            '/api/income' +
+            '/api/expenses' +
             '?userID=' +
             encodeURIComponent(
                 userID
             ) +
-            '&incomeID=' +
+            '&expenseID=' +
             encodeURIComponent(
-                incomeID
+                expenseID
             );
 
 
@@ -1006,64 +884,48 @@ async function deleteIncome(
             await response.json();
 
 
-        if (!response.ok) {
-
-            throw new Error(
-                result.message ||
-                'Income could not be deleted.'
-            );
-        }
-
-
-        if (!result.success) {
-
-            throw new Error(
-                result.message ||
-                'Income could not be deleted.'
-            );
-        }
-
-
         if (
-            Number(
-                editingIncomeID
-            ) ===
-            Number(
-                incomeID
-            )
+            !response.ok ||
+            !result.success
         ) {
 
-            editingIncomeID =
-                null;
-
-
-            const addButton =
-                document.getElementById(
-                    'addBtn'
-                );
-
-
-            if (addButton) {
-
-                addButton.textContent =
-                    'Add Income';
-            }
+            throw new Error(
+                result.message ||
+                'Expense could not be deleted.'
+            );
         }
 
 
-        await loadIncomeFromDatabase();
+        editingExpenseID =
+            null;
+
+
+        const submitButton =
+            document.getElementById(
+                'submitBtn'
+            );
+
+
+        if (submitButton) {
+
+            submitButton.textContent =
+                'Add Expense';
+        }
+
+
+        await loadExpensesFromDatabase();
 
 
     } catch (error) {
 
         console.error(
-            'Income delete error:',
+            'Expense delete error:',
             error
         );
 
 
         alert(
-            'Could not delete income: ' +
+            'Could not delete expense: ' +
             error.message
         );
     }
@@ -1072,11 +934,11 @@ async function deleteIncome(
 
 /*
  * ==================================================
- * TABLE BUTTON HANDLER
+ * BUTTON CLICKS
  * ==================================================
  */
 
-function handleTableClick(
+function handleExpenseTableClick(
     event
 ) {
 
@@ -1087,19 +949,17 @@ function handleTableClick(
 
 
     if (!button) {
-
         return;
     }
 
 
-    const incomeID =
+    const expenseID =
         Number(
             button.dataset.id
         );
 
 
-    if (!incomeID) {
-
+    if (!expenseID) {
         return;
     }
 
@@ -1110,8 +970,8 @@ function handleTableClick(
         )
     ) {
 
-        beginEditIncome(
-            incomeID
+        beginEditExpense(
+            expenseID
         );
 
         return;
@@ -1124,8 +984,8 @@ function handleTableClick(
         )
     ) {
 
-        deleteIncome(
-            incomeID
+        deleteExpense(
+            expenseID
         );
     }
 }
@@ -1133,15 +993,12 @@ function handleTableClick(
 
 /*
  * ==================================================
- * INITIALIZE PAGE
+ * PAGE INITIALIZATION
  * ==================================================
  */
 
-async function initIncomePage() {
+async function initExpensePage() {
 
-    /*
-     * Load the existing login/app state.
-     */
     if (
         typeof loadAppState ===
         'function'
@@ -1151,29 +1008,18 @@ async function initIncomePage() {
     }
 
 
-    /*
-     * Display the logged-in username.
-     */
     displayUsername();
 
 
-    /*
-     * Make sure we have a UserID.
-     */
     const userID =
         getCurrentUserID();
 
 
     if (!userID) {
 
-        console.error(
-            'Income page opened without a UserID.'
-        );
-
         alert(
-            'Please log in again before opening the Income page.'
+            'Please log in again.'
         );
-
 
         window.location.href =
             '../index.html';
@@ -1182,22 +1028,16 @@ async function initIncomePage() {
     }
 
 
-    /*
-     * Attach JavaScript to the form.
-     *
-     * This is what prevents the
-     * "GET required" problem.
-     */
     const form =
         document.getElementById(
-            'incomeForm'
+            'expenseForm'
         );
 
 
     if (!form) {
 
         console.error(
-            'incomeForm was not found.'
+            'expenseForm was not found.'
         );
 
         return;
@@ -1206,16 +1046,13 @@ async function initIncomePage() {
 
     form.addEventListener(
         'submit',
-        submitIncome
+        submitExpense
     );
 
 
-    /*
-     * Attach Edit/Delete controls.
-     */
     const tableBody =
         document.getElementById(
-            'incomeEntries'
+            'expenseEntriesTableBody'
         );
 
 
@@ -1223,22 +1060,18 @@ async function initIncomePage() {
 
         tableBody.addEventListener(
             'click',
-            handleTableClick
+            handleExpenseTableClick
         );
     }
 
 
-    /*
-     * Finally load this user's
-     * income directly from Derby.
-     */
-    await loadIncomeFromDatabase();
+    await loadExpensesFromDatabase();
 }
 
 
 /*
  * ==================================================
- * START PAGE
+ * START
  * ==================================================
  */
 
@@ -1249,10 +1082,10 @@ if (
 
     document.addEventListener(
         'DOMContentLoaded',
-        initIncomePage
+        initExpensePage
     );
 
 } else {
 
-    initIncomePage();
+    initExpensePage();
 }

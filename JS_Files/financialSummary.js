@@ -1,184 +1,733 @@
-import { appState } from '../variables.js';
+import {
+    appState,
+    loadAppState
+} from '../variables.js';
 
-if (typeof appState.loadExpenses === 'function') {
-    appState.loadExpenses();
-}
 
-const totalAmountEl = document.getElementById('totalAmount') || document.querySelector('[id*="totalAmount"]');
-const incomeMonthEl = document.getElementById('incomeMonth') || document.querySelector('[id*="incomeMonth"]');
-const expensesMonthEl = document.getElementById('expensesMonth');
+/*
+ * ==================================================
+ * SUMMARY PAGE DATA
+ * ==================================================
+ */
 
-function escapeHTML(str) {
-    if (!str) return '';
-    return String(str).replace(/[&<>"']/g, m => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#x27;'
-    }[m]));
-}
-
-function updateDashboardMetricsDisplay() {
-    if (!appState.isLoggedIn) {
-        window.location.href = 'index.html';
-        return;
-    }
-
-    const totalTarget = document.getElementById('totalAmount');
-    if (totalTarget) totalTarget.textContent = '$' + (Number(appState.balance) || 0).toFixed(2);
-    const incomeTarget = document.getElementById('incomeMonth');
-    if (incomeTarget) incomeTarget.textContent = '$' + (Number(appState.income) || 0).toFixed(2);
-    const expensesTarget = document.getElementById('expensesMonth');
-    if (expensesTarget) expensesTarget.textContent = '$' + (Number(appState.expenses) || 0).toFixed(2);
-
-    const usernameContainer = document.querySelector('.username-text') || document.querySelector('h2');
-    if (usernameContainer && appState.accountCreated && appState.username) {
-        const cleanName = escapeHTML(appState.username);
-        if (usernameContainer.innerHTML.includes('(Username)')) {
-            usernameContainer.innerHTML = usernameContainer.innerHTML.replace('(Username)', cleanName);
-        } else {
-            usernameContainer.textContent = cleanName;
-        }
-    }
-
-    if (totalAmountEl) totalAmountEl.textContent = '$' + (Number(appState.balance) || 0).toFixed(2);
-    if (incomeMonthEl) incomeMonthEl.textContent = '$' + (Number(appState.income) || 0).toFixed(2);
-    if (expensesMonthEl) expensesMonthEl.textContent = '$' + (Number(appState.expenses) || 0).toFixed(2);
-}
+let incomeRecords = [];
+let expenseRecords = [];
 
 let pieChartInstance = null;
 
-function renderOrUpdateFinancialChart() {
-    const chartCanvas = document.getElementById('pieChart');
-    if (!chartCanvas || typeof Chart === 'undefined') return;
-    const ctx = chartCanvas.getContext('2d');
 
-    const currentIncome = Math.max(0, Number(appState.income) || 0);
-    const currentExpenses = Math.max(0, Number(appState.expenses) || 0);
-    const currentBalance = Math.max(0, Number(appState.balance) || 0);
+/*
+ * ==================================================
+ * HELPERS
+ * ==================================================
+ */
 
-    if (pieChartInstance) {
-        pieChartInstance.data.datasets[0].data = [currentIncome, currentExpenses, currentBalance];
-        pieChartInstance.update();
-    } else {
-        pieChartInstance = new Chart(ctx, {
-            type: 'pie',
-            data: {
-                labels: ['Income', 'Expenses', 'Balance'],
-                datasets: [{
-                    data: [currentIncome, currentExpenses, currentBalance],
-                    backgroundColor: ['#4CAF50', '#F44336', '#2196F3'],
-                    borderColor: '#fff',
-                    borderWidth: 2
-                }]
+function getCurrentUserID() {
+
+    const sessionUserID =
+        sessionStorage.getItem(
+            'ewallet_userID'
+        );
+
+    if (sessionUserID) {
+        return Number(
+            sessionUserID
+        );
+    }
+
+
+    const localUserID =
+        localStorage.getItem(
+            'ewallet_userID'
+        );
+
+    if (localUserID) {
+        return Number(
+            localUserID
+        );
+    }
+
+
+    return null;
+}
+
+
+function getUsername() {
+
+    if (
+        appState.username &&
+        appState.username !== '(Username)'
+    ) {
+
+        return appState.username;
+    }
+
+
+    return '(Username)';
+}
+
+
+function formatMoney(
+    value
+) {
+
+    return '$' +
+        (
+            Number(value) || 0
+        ).toFixed(2);
+}
+
+
+/*
+ * ==================================================
+ * LOAD DERBY DATA
+ * ==================================================
+ */
+
+async function loadFinancialData() {
+
+    const userID =
+        getCurrentUserID();
+
+
+    if (!userID) {
+
+        alert(
+            'Please log in again.'
+        );
+
+        window.location.href =
+            '../index.html';
+
+        return;
+    }
+
+
+    try {
+
+        /*
+         * Load income and expenses
+         * at the same time.
+         */
+        const [
+            incomeResponse,
+            expenseResponse
+        ] = await Promise.all([
+
+            fetch(
+                '/api/income?userID=' +
+                encodeURIComponent(
+                    userID
+                )
+            ),
+
+            fetch(
+                '/api/expenses?userID=' +
+                encodeURIComponent(
+                    userID
+                )
+            )
+        ]);
+
+
+        const incomeResult =
+            await incomeResponse.json();
+
+
+        const expenseResult =
+            await expenseResponse.json();
+
+
+        if (
+            !incomeResponse.ok ||
+            !incomeResult.success
+        ) {
+
+            throw new Error(
+                incomeResult.message ||
+                'Could not load income.'
+            );
+        }
+
+
+        if (
+            !expenseResponse.ok ||
+            !expenseResult.success
+        ) {
+
+            throw new Error(
+                expenseResult.message ||
+                'Could not load expenses.'
+            );
+        }
+
+
+        incomeRecords =
+            Array.isArray(
+                incomeResult.income
+            )
+                ? incomeResult.income
+                : [];
+
+
+        expenseRecords =
+            Array.isArray(
+                expenseResult.expenses
+            )
+                ? expenseResult.expenses
+                : [];
+
+
+        updateDashboardMetricsDisplay();
+
+        renderOrUpdateFinancialChart();
+
+
+    } catch (error) {
+
+        console.error(
+            'Financial summary load error:',
+            error
+        );
+
+
+        alert(
+            'Could not load financial summary from the database.'
+        );
+    }
+}
+
+
+/*
+ * ==================================================
+ * CALCULATIONS
+ * ==================================================
+ */
+
+function getYearlyIncome() {
+
+    return incomeRecords.reduce(
+        (
+            total,
+            income
+        ) => {
+
+            const amount =
+                Number(
+                    income.amount
+                ) || 0;
+
+
+            const frequency =
+                Number(
+                    income.frequency
+                ) || 1;
+
+
+            return total +
+                (
+                    amount *
+                    frequency
+                );
+        },
+        0
+    );
+}
+
+
+function getYearlyExpenses() {
+
+    return expenseRecords.reduce(
+        (
+            total,
+            expense
+        ) => {
+
+            const amount =
+                Number(
+                    expense.amount
+                ) || 0;
+
+
+            const frequency =
+                Number(
+                    expense.frequency
+                ) || 1;
+
+
+            return total +
+                (
+                    amount *
+                    frequency
+                );
+        },
+        0
+    );
+}
+
+
+function getMonthlyIncome() {
+
+    return getYearlyIncome() / 12;
+}
+
+
+function getMonthlyExpenses() {
+
+    return getYearlyExpenses() / 12;
+}
+
+
+function getYearlyLeftover() {
+
+    return (
+        getYearlyIncome() -
+        getYearlyExpenses()
+    );
+}
+
+
+function getMonthlyLeftover() {
+
+    return (
+        getMonthlyIncome() -
+        getMonthlyExpenses()
+    );
+}
+
+
+/*
+ * This calculates what was actually
+ * entered with a date in the current
+ * calendar month.
+ *
+ * It does not multiply recurring income
+ * by frequency here because this field
+ * specifically says "Income This Month."
+ */
+function getIncomeThisMonth() {
+
+    const now =
+        new Date();
+
+
+    const currentMonth =
+        `${now.getFullYear()}-${String(
+            now.getMonth() + 1
+        ).padStart(2, '0')}`;
+
+
+    return incomeRecords
+        .filter(
+            income =>
+                String(
+                    income.date || ''
+                ).startsWith(
+                    currentMonth
+                )
+        )
+        .reduce(
+            (
+                total,
+                income
+            ) => {
+
+                return total +
+                    (
+                        Number(
+                            income.amount
+                        ) || 0
+                    );
             },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: { size: 14 },
-                            color: '#000000'
-                        }
-                    },
-                    tooltip: {
-                        titleFont: { size: 14 },
-                        bodyFont: { size: 13 },
-                        callbacks: {
-                            label: function(context) {
-                                const val = context.raw || 0;
-                                return ` ${context.label}: $${val.toFixed(2)}`;
+            0
+        );
+}
+
+
+function getExpensesThisMonth() {
+
+    const now =
+        new Date();
+
+
+    const currentMonth =
+        `${now.getFullYear()}-${String(
+            now.getMonth() + 1
+        ).padStart(2, '0')}`;
+
+
+    return expenseRecords
+        .filter(
+            expense =>
+                String(
+                    expense.date || ''
+                ).startsWith(
+                    currentMonth
+                )
+        )
+        .reduce(
+            (
+                total,
+                expense
+            ) => {
+
+                return total +
+                    (
+                        Number(
+                            expense.amount
+                        ) || 0
+                    );
+            },
+            0
+        );
+}
+
+
+/*
+ * ==================================================
+ * UPDATE SUMMARY TEXT
+ * ==================================================
+ */
+
+function updateDashboardMetricsDisplay() {
+
+    const usernameContainer =
+        document.querySelector(
+            '.username-text'
+        );
+
+
+    if (usernameContainer) {
+
+        usernameContainer.textContent =
+            getUsername();
+    }
+
+
+    const yearlyIncomeEl =
+        document.getElementById(
+            'yearlyIncome'
+        );
+
+
+    const yearlyExpensesEl =
+        document.getElementById(
+            'yearlyExpenses'
+        );
+
+
+    const yearlyLeftoverEl =
+        document.getElementById(
+            'totalAmount'
+        );
+
+
+    const monthlyIncomeEl =
+        document.getElementById(
+            'monthlyIncome'
+        );
+
+
+    const monthlyExpensesEl =
+        document.getElementById(
+            'monthlyExpenses'
+        );
+
+
+    const monthlyLeftoverEl =
+        document.getElementById(
+            'monthlyLeftover'
+        );
+
+
+    const incomeThisMonthEl =
+        document.getElementById(
+            'incomeMonth'
+        );
+
+
+    const expensesThisMonthEl =
+        document.getElementById(
+            'expensesMonth'
+        );
+
+
+    if (yearlyIncomeEl) {
+
+        yearlyIncomeEl.textContent =
+            formatMoney(
+                getYearlyIncome()
+            );
+    }
+
+
+    if (yearlyExpensesEl) {
+
+        yearlyExpensesEl.textContent =
+            formatMoney(
+                getYearlyExpenses()
+            );
+    }
+
+
+    if (yearlyLeftoverEl) {
+
+        yearlyLeftoverEl.textContent =
+            formatMoney(
+                getYearlyLeftover()
+            );
+    }
+
+
+    if (monthlyIncomeEl) {
+
+        monthlyIncomeEl.textContent =
+            formatMoney(
+                getMonthlyIncome()
+            );
+    }
+
+
+    if (monthlyExpensesEl) {
+
+        monthlyExpensesEl.textContent =
+            formatMoney(
+                getMonthlyExpenses()
+            );
+    }
+
+
+    if (monthlyLeftoverEl) {
+
+        monthlyLeftoverEl.textContent =
+            formatMoney(
+                getMonthlyLeftover()
+            );
+    }
+
+
+    if (incomeThisMonthEl) {
+
+        incomeThisMonthEl.textContent =
+            formatMoney(
+                getIncomeThisMonth()
+            );
+    }
+
+
+    if (expensesThisMonthEl) {
+
+        expensesThisMonthEl.textContent =
+            formatMoney(
+                getExpensesThisMonth()
+            );
+    }
+}
+
+
+/*
+ * ==================================================
+ * PIE CHART
+ * ==================================================
+ */
+
+function renderOrUpdateFinancialChart() {
+
+    const chartCanvas =
+        document.getElementById('pieChart');
+
+    if (!chartCanvas) {
+        console.error('pieChart canvas was not found.');
+        return;
+    }
+
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js was not loaded.');
+        return;
+    }
+
+    /*
+     * These values now come from the
+     * Income and Expense records loaded
+     * from Derby.
+     */
+    const currentIncome =
+        Number(getYearlyIncome()) || 0;
+
+    const currentExpenses =
+        Number(getYearlyExpenses()) || 0;
+
+    const currentSavings =
+        Math.max(
+            0,
+            currentIncome - currentExpenses
+        );
+
+    /*
+     * Helpful test so we know exactly
+     * what Chart.js is receiving.
+     */
+    console.log(
+        'PIE CHART VALUES:',
+        {
+            income: currentIncome,
+            expenses: currentExpenses,
+            savings: currentSavings
+        }
+    );
+
+    /*
+     * Remove any previous chart attached
+     * to this canvas.
+     */
+    const oldChart =
+        Chart.getChart(chartCanvas);
+
+    if (oldChart) {
+        oldChart.destroy();
+    }
+
+    const ctx =
+        chartCanvas.getContext('2d');
+
+    pieChartInstance =
+        new Chart(
+            ctx,
+            {
+                type: 'pie',
+
+                data: {
+                    labels: [
+                        'Yearly Income',
+                        'Yearly Expenses',
+                        'Estimated Yearly Savings'
+                    ],
+
+                    datasets: [{
+                        data: [
+                            currentIncome,
+                            currentExpenses,
+                            currentSavings
+                        ],
+
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#F44336',
+                            '#2196F3'
+                        ],
+
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
+                },
+
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+
+                    plugins: {
+                        legend: {
+                            position: 'right',
+
+                            labels: {
+                                font: {
+                                    size: 14
+                                },
+
+                                color: '#000000',
+                                padding: 20
+                            }
+                        },
+
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+
+                                    const value =
+                                        Number(
+                                            context.raw
+                                        ) || 0;
+
+                                    return (
+                                        ' ' +
+                                        context.label +
+                                        ': $' +
+                                        value.toFixed(2)
+                                    );
+                                }
                             }
                         }
                     }
                 }
             }
-        });
-    }
+        );
 }
+/*
+ * ==================================================
+ * REPORT BUTTONS
+ * ==================================================
+ */
 
-function initSummaryPageLifecycle() {
-    updateDashboardMetricsDisplay();
-    renderOrUpdateFinancialChart();
-}
-
-window.addEventListener('storage', (event) => {
-    if (event.key === 'appState') {
-        if (typeof appState.loadExpenses === 'function') appState.loadExpenses();
-        initSummaryPageLifecycle();
-    }
-});
-
-if (typeof document !== 'undefined') {
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', initSummaryPageLifecycle);
-    } else {
-        initSummaryPageLifecycle();
-    }
-}
-// ==================================================
-// REPORT BUTTONS
-// ==================================================
-
-function getCurrentUserID() {
-
-    const sessionUserID =
-        sessionStorage.getItem('ewallet_userID');
-
-    if (sessionUserID) {
-        return Number(sessionUserID);
-    }
-
-    const localUserID =
-        localStorage.getItem('ewallet_userID');
-
-    if (localUserID) {
-        return Number(localUserID);
-    }
-
-    /*
-     * Temporary fallback while Derby-backed HTML
-     * authentication is being completed.
-     */
-    return 1;
-}
-
-
-async function loadFinancialReport(endpoint) {
+async function loadFinancialReport(
+    endpoint
+) {
 
     const userID =
         getCurrentUserID();
 
-    const reportOutput =
-        document.getElementById('reportOutput');
 
-    if (!reportOutput) {
+    if (!userID) {
+
+        alert(
+            'Please log in again.'
+        );
+
         return;
     }
+
+
+    const reportOutput =
+        document.getElementById(
+            'reportOutput'
+        );
+
+
+    if (!reportOutput) {
+
+        return;
+    }
+
 
     try {
 
         reportOutput.textContent =
             'Loading report...';
 
+
         const response =
             await fetch(
                 `${endpoint}?userID=${userID}`
             );
 
+
         const reportText =
             await response.text();
+
 
         if (!response.ok) {
 
             reportOutput.textContent =
-                'Could not load report.\n\n'
-                + reportText;
+                'Could not load report.\n\n' +
+                reportText;
+
 
             return;
         }
 
+
         reportOutput.textContent =
             reportText;
+
 
     } catch (error) {
 
@@ -186,6 +735,7 @@ async function loadFinancialReport(endpoint) {
             'Report request failed:',
             error
         );
+
 
         reportOutput.textContent =
             'Could not connect to the EWallet backend.';
@@ -200,67 +750,79 @@ function initializeReportButtons() {
             'incomeReportBtn'
         );
 
+
     const expenseReportBtn =
         document.getElementById(
             'expenseReportBtn'
         );
+
 
     const fullReportBtn =
         document.getElementById(
             'fullReportBtn'
         );
 
+
     if (incomeReportBtn) {
 
         incomeReportBtn.addEventListener(
             'click',
-            () => loadFinancialReport(
-                '/api/report/income'
-            )
+            () =>
+                loadFinancialReport(
+                    '/api/report/income'
+                )
         );
     }
+
 
     if (expenseReportBtn) {
 
         expenseReportBtn.addEventListener(
             'click',
-            () => loadFinancialReport(
-                '/api/report/expenses'
-            )
+            () =>
+                loadFinancialReport(
+                    '/api/report/expenses'
+                )
         );
     }
+
 
     if (fullReportBtn) {
 
         fullReportBtn.addEventListener(
             'click',
-            () => loadFinancialReport(
-                '/api/report/full'
-            )
+            () =>
+                loadFinancialReport(
+                    '/api/report/full'
+                )
         );
     }
 }
 
 
-if (document.readyState === 'loading') {
+/*
+ * ==================================================
+ * CSV EXPORT
+ * ==================================================
+ */
 
-    document.addEventListener(
-        'DOMContentLoaded',
-        initializeReportButtons
-    );
-
-} else {
-
-    initializeReportButtons();
-}
-// ==================================================
-// CSV EXPORT BUTTONS
-// ==================================================
-
-function downloadCSV(endpoint) {
+function downloadCSV(
+    endpoint
+) {
 
     const userID =
         getCurrentUserID();
+
+
+    if (!userID) {
+
+        alert(
+            'Please log in again.'
+        );
+
+        return;
+    }
+
 
     window.location.href =
         `${endpoint}?userID=${userID}`;
@@ -274,62 +836,61 @@ function initializeExportButtons() {
             'exportIncomeBtn'
         );
 
+
     const exportExpenseBtn =
         document.getElementById(
             'exportExpenseBtn'
         );
+
 
     const exportFullBtn =
         document.getElementById(
             'exportFullBtn'
         );
 
+
     if (exportIncomeBtn) {
 
         exportIncomeBtn.addEventListener(
             'click',
-            () => downloadCSV(
-                '/api/export/income'
-            )
+            () =>
+                downloadCSV(
+                    '/api/export/income'
+                )
         );
     }
+
 
     if (exportExpenseBtn) {
 
         exportExpenseBtn.addEventListener(
             'click',
-            () => downloadCSV(
-                '/api/export/expenses'
-            )
+            () =>
+                downloadCSV(
+                    '/api/export/expenses'
+                )
         );
     }
+
 
     if (exportFullBtn) {
 
         exportFullBtn.addEventListener(
             'click',
-            () => downloadCSV(
-                '/api/export/full'
-            )
+            () =>
+                downloadCSV(
+                    '/api/export/full'
+                )
         );
     }
 }
 
 
-if (document.readyState === 'loading') {
-
-    document.addEventListener(
-        'DOMContentLoaded',
-        initializeExportButtons
-    );
-
-} else {
-
-    initializeExportButtons();
-}
-// ==================================================
-// CSV IMPORT BUTTONS
-// ==================================================
+/*
+ * ==================================================
+ * CSV IMPORT
+ * ==================================================
+ */
 
 async function importCSV(
     fileInputID,
@@ -341,15 +902,17 @@ async function importCSV(
             fileInputID
         );
 
+
     const reportOutput =
         document.getElementById(
             'reportOutput'
         );
 
+
     if (
-        !fileInput
-        || !fileInput.files
-        || fileInput.files.length === 0
+        !fileInput ||
+        !fileInput.files ||
+        fileInput.files.length === 0
     ) {
 
         alert(
@@ -359,16 +922,30 @@ async function importCSV(
         return;
     }
 
-    const file =
-        fileInput.files[0];
 
     const userID =
         getCurrentUserID();
+
+
+    if (!userID) {
+
+        alert(
+            'Please log in again.'
+        );
+
+        return;
+    }
+
+
+    const file =
+        fileInput.files[0];
+
 
     try {
 
         const csvText =
             await file.text();
+
 
         if (reportOutput) {
 
@@ -376,31 +953,42 @@ async function importCSV(
                 'Importing CSV...';
         }
 
+
         const response =
             await fetch(
                 `${endpoint}?userID=${userID}`,
                 {
-                    method: 'POST',
+
+                    method:
+                        'POST',
 
                     headers: {
+
                         'Content-Type':
                             'text/csv; charset=UTF-8'
                     },
 
-                    body: csvText
+                    body:
+                        csvText
                 }
             );
+
 
         const result =
             await response.json();
 
+
         if (!response.ok) {
 
             const message =
-                result.message
-                || 'CSV import failed.';
+                result.message ||
+                'CSV import failed.';
 
-            alert(message);
+
+            alert(
+                message
+            );
+
 
             if (reportOutput) {
 
@@ -408,10 +996,15 @@ async function importCSV(
                     message;
             }
 
+
             return;
         }
 
-        alert(result.message);
+
+        alert(
+            result.message
+        );
+
 
         if (reportOutput) {
 
@@ -419,7 +1012,17 @@ async function importCSV(
                 result.message;
         }
 
-        fileInput.value = '';
+
+        fileInput.value =
+            '';
+
+
+        /*
+         * Reload summary because imported
+         * records were added to Derby.
+         */
+        await loadFinancialData();
+
 
     } catch (error) {
 
@@ -428,9 +1031,11 @@ async function importCSV(
             error
         );
 
+
         alert(
             'Could not import CSV.'
         );
+
 
         if (reportOutput) {
 
@@ -448,43 +1053,102 @@ function initializeImportButtons() {
             'importIncomeBtn'
         );
 
+
     const importExpenseBtn =
         document.getElementById(
             'importExpenseBtn'
         );
 
+
     if (importIncomeBtn) {
 
         importIncomeBtn.addEventListener(
             'click',
-            () => importCSV(
-                'incomeCsvInput',
-                '/api/import/income'
-            )
+            () =>
+                importCSV(
+                    'incomeCsvInput',
+                    '/api/import/income'
+                )
         );
     }
+
 
     if (importExpenseBtn) {
 
         importExpenseBtn.addEventListener(
             'click',
-            () => importCSV(
-                'expenseCsvInput',
-                '/api/import/expenses'
-            )
+            () =>
+                importCSV(
+                    'expenseCsvInput',
+                    '/api/import/expenses'
+                )
         );
     }
 }
 
 
-if (document.readyState === 'loading') {
+/*
+ * ==================================================
+ * INITIALIZE PAGE
+ * ==================================================
+ */
+
+async function initSummaryPage() {
+
+    if (
+        typeof loadAppState ===
+        'function'
+    ) {
+
+        loadAppState();
+    }
+
+
+    const userID =
+        getCurrentUserID();
+
+
+    if (!userID) {
+
+        alert(
+            'Please log in again.'
+        );
+
+        window.location.href =
+            '../index.html';
+
+        return;
+    }
+
+
+    initializeReportButtons();
+
+    initializeExportButtons();
+
+    initializeImportButtons();
+
+
+    await loadFinancialData();
+}
+
+
+/*
+ * ==================================================
+ * START
+ * ==================================================
+ */
+
+if (
+    document.readyState ===
+    'loading'
+) {
 
     document.addEventListener(
         'DOMContentLoaded',
-        initializeImportButtons
+        initSummaryPage
     );
 
 } else {
 
-    initializeImportButtons();
+    initSummaryPage();
 }
