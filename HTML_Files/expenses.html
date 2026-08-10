@@ -1,13 +1,435 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="../Pictures/appLogo.png"
+    >
+
+    <link
+        rel="stylesheet"
+        href="../CSS_Files/styles.css"
+    >
+
+    <title>EWallet Expenses</title>
 <meta charset="UTF-8">
 <link rel="icon" type="image/png" href="../Pictures/appLogo.png">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="../CSS_Files/styles.css">
 <title>EWallet Expenses</title>
 </head>
+
 <body>
+
+    <!-- ========================================= -->
+    <!-- HEADER -->
+    <!-- ========================================= -->
+
+    <header id="intro">
+
+        <h1 class="title">
+            EWallet Expenses
+        </h1>
+
+        <h2>
+            <img
+                src="../Pictures/usernameIcon.png"
+                alt="Username Icon"
+                id="usernameIcon"
+            >
+
+            <span class="username-text">
+                (Username)
+            </span>
+        </h2>
+
+
+        <!-- ========================================= -->
+        <!-- NAVIGATION -->
+        <!-- ========================================= -->
+
+        <div id="optionButtons">
+
+            <button
+                id="incomeButton"
+                type="button"
+                onclick="window.location.href='income.html'">
+
+                <h2>Income</h2>
+
+            </button>
+
+
+            <button
+                id="mainPageButton"
+                type="button"
+                onclick="window.location.href='../index.html'">
+
+                <h2>Main Page</h2>
+
+            </button>
+
+
+            <button
+                id="planningButton"
+                type="button"
+                onclick="window.location.href='planning.html'">
+
+                <h2>Planning</h2>
+
+            </button>
+
+
+            <button
+                id="summaryButton"
+                type="button"
+                onclick="window.location.href='financialSummary.html'">
+
+                <h2>Summary</h2>
+
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- ========================================= -->
+    <!-- MAIN EXPENSE CONTENT -->
+    <!-- ========================================= -->
+
+    <main>
+
+        <section
+            id="expenseSummary"
+            aria-labelledby="expensesHeading">
+
+            <h2
+                class="title"
+                id="expensesHeading">
+
+                Expenses
+
+            </h2>
+
+
+            <img
+                src="../Pictures/PawPrints.png"
+                alt=""
+                role="presentation"
+                id="pawPrints1"
+            >
+
+            <img
+                src="../Pictures/PawPrints.png"
+                alt=""
+                role="presentation"
+                id="pawPrints2"
+            >
+
+
+            <!-- ========================================= -->
+            <!-- EXPENSE SUMMARY -->
+            <!-- ========================================= -->
+
+            <div class="summary-container">
+
+                <div class="expense-sum">
+
+                    <p class="summary-label">
+                        Current Income:
+                    </p>
+
+                    <h3
+                        class="money-amount"
+                        id="totalAmountDisplay">
+
+                        $0.00
+
+                    </h3>
+
+                </div>
+
+
+                <div class="expense-sum">
+
+                    <p class="summary-label">
+                        Expenses Per Month:
+                    </p>
+
+                    <h3
+                        class="money-amount"
+                        id="monthAmountDisplay">
+
+                        $0.00
+
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <!-- ========================================= -->
+            <!-- ADD / EDIT EXPENSE FORM -->
+            <!-- ========================================= -->
+
+            <form id="expenseForm">
+
+
+                <!-- DATE -->
+
+                <div class="form-group">
+
+                    <label for="expensesDate">
+                        Date:
+                    </label>
+
+                    <input
+                        type="date"
+                        id="expensesDate"
+                        name="date"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- SOURCE -->
+
+                <div class="form-group">
+
+                    <label for="expensesSource">
+                        Source:
+                    </label>
+
+                    <input
+                        type="text"
+                        id="expensesSource"
+                        name="source"
+                        placeholder="Bills, Store, etc."
+                        required
+                    >
+
+                </div>
+
+
+                <!-- AMOUNT -->
+
+                <div class="form-group">
+
+                    <label for="expensesAmount">
+                        Amount:
+                    </label>
+
+                    <input
+                        type="number"
+                        id="expensesAmount"
+                        name="amount"
+                        placeholder="0.00"
+                        step="0.01"
+                        min="0"
+                        required
+                    >
+
+                </div>
+
+
+                <!-- FREQUENCY -->
+
+                <div class="form-group">
+
+                    <label for="expensesFrequency">
+                        Frequency:
+                    </label>
+
+                    <select
+                        id="expensesFrequency"
+                        name="frequency"
+                        required>
+
+                        <option value="1">
+                            One Time or Yearly
+                        </option>
+
+                        <option value="12">
+                            Monthly
+                        </option>
+
+                        <option value="24">
+                            Twice Monthly
+                        </option>
+
+                        <option value="26">
+                            Biweekly
+                        </option>
+
+                        <option value="52">
+                            Weekly
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- CATEGORY -->
+
+                <div class="form-group">
+
+                    <label for="expensesCategory">
+                        Category:
+                    </label>
+
+                    <select
+                        id="expensesCategory"
+                        name="category"
+                        required>
+
+                        <option value="Tech">
+                            Tech
+                        </option>
+
+                        <option value="Fun">
+                            Fun
+                        </option>
+
+                        <option value="General">
+                            General
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <!-- NOTES -->
+
+                <div class="form-group">
+
+                    <label for="expensesNotes">
+                        Notes:
+                    </label>
+
+                    <textarea
+                        id="expensesNotes"
+                        name="notes"
+                        placeholder="Additional notes">
+                    </textarea>
+
+                </div>
+
+
+                <!-- SUBMIT -->
+
+                <button
+                    type="submit"
+                    id="submitBtn">
+
+                    Add Expense
+
+                </button>
+
+            </form>
+
+        </section>
+
+
+        <!-- ========================================= -->
+        <!-- EXPENSE ENTRIES -->
+        <!-- ========================================= -->
+
+        <section
+            id="expenseEntries"
+            aria-labelledby="entriesHeading">
+
+            <h2
+                class="title"
+                id="entriesHeading">
+
+                Expense Entries
+
+            </h2>
+
+
+            <div class="table-responsive">
+
+                <table id="expenseTable">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>
+                                Date
+                            </th>
+
+                            <th>
+                                Source
+                            </th>
+
+                            <th>
+                                Category
+                            </th>
+
+                            <th>
+                                Amount
+                            </th>
+
+                            <th>
+                                Frequency
+                            </th>
+
+                            <th>
+                                Notes
+                            </th>
+
+                            <th>
+                                Actions
+                            </th>
+
+                        </tr>
+
+                    </thead>
+
+
+                    <tbody id="expenseEntriesTableBody">
+
+                        <!--
+                            Expense rows will be
+                            loaded from Derby
+                            by expenses.js
+                        -->
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- ========================================= -->
+    <!-- JAVASCRIPT -->
+    <!-- ========================================= -->
+
+    <script
+        type="module"
+        src="../expenses.js">
+    </script>
+
 	<div id="intro">
 
 		<div class="intro-top-row">
@@ -149,4 +571,5 @@
 
 	<script type="module" src="../JS_Files/app.js"></script>
 </body>
+
 </html>
