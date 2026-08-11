@@ -1,4 +1,4 @@
-/* Page Styles */
+
 html {
     background-color: #A2C3A4;
     box-sizing: border-box;
@@ -19,7 +19,6 @@ body {
     overflow-x: hidden; 
 }
 
-/* EWALLET Logo Styling */
 
 .title {
     position: relative;
@@ -332,7 +331,6 @@ table td button {
     min-height: 38px; /* Safe minimum touch metric target expansion formatting */
 }
 
-/* Centralized Onboarding Modal Interface Overlay Layering Rules */
 .modal-overlay {
     position: fixed;
     top: 0;
