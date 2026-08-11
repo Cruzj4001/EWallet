@@ -157,16 +157,36 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!appState.isLoggedIn && accountModal && profileForm) {
         accountModal.style.display = 'flex';
 
-        const modalTitle = document.getElementById('modalTitle');
-        const baseBalanceInput = document.getElementById('walletBaseBalance');
-        const setupFields = baseBalanceInput ? baseBalanceInput.closest('.form-group').parentNode : null;
+		const modalTitle = document.getElementById('modalTitle');
 
-        if (appState.accountCreated && modalTitle) {
-            modalTitle.innerText = "Log In to Your Wallet";
-            if (setupFields) {
-                setupFields.style.display = 'none';
-            }
-        }
+		const baseBalanceInput =
+		    document.getElementById('walletBaseBalance');
+
+		const baseIncomeInput =
+		    document.getElementById('walletBaseIncome');
+
+		const balanceGroup =
+		    baseBalanceInput
+		        ? baseBalanceInput.closest('.form-group')
+		        : null;
+
+		const incomeGroup =
+		    baseIncomeInput
+		        ? baseIncomeInput.closest('.form-group')
+		        : null;
+
+		if (appState.accountCreated && modalTitle) {
+
+		    modalTitle.innerText = "Log In to Your Wallet";
+
+		    if (balanceGroup) {
+		        balanceGroup.style.display = 'none';
+		    }
+
+		    if (incomeGroup) {
+		        incomeGroup.style.display = 'none';
+		    }
+		}
 
         profileForm.addEventListener('submit', handleAuthFormSubmit);
         const submitBtn = document.getElementById('createAccountBtn') || profileForm.querySelector('button[type="submit"]');

@@ -683,8 +683,11 @@ table td button {
 
 
 #convertCurrencyBtn {
-    width: flex;
-    margin-top: 16px;
+    display: block;
+    width: 100%;
+    max-width: 500px;
+    margin: 24px auto 0;
+    box-sizing: border-box;
 }
 
 
