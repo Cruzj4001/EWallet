@@ -10,10 +10,9 @@ function escapeHTML(str) {
 
 // frequency helper
 
-function getFrequencyLabel(frequency) 
-{
-    const labels = 
-	{
+function getFrequencyLabel(frequency) {
+    const labels =
+    {
         1: 'One Time or Yearly',
         12: 'Monthly',
         24: 'Twice Monthly',
@@ -48,12 +47,12 @@ async function handleAuthFormSubmit(ev) {
     }
 
     const hashedPassword = await hashPassword(rawPassword);
-    
+
     let accounts = [];
     try {
         const storedAccounts = localStorage.getItem('ewallet_accounts_db');
         if (storedAccounts) accounts = JSON.parse(storedAccounts);
-    } catch(e) { console.error("Database read exception:", e); }
+    } catch (e) { console.error("Database read exception:", e); }
 
     const existingAccount = accounts.find(a => a.username.toLowerCase() === newUsername.toLowerCase());
 
@@ -64,7 +63,7 @@ async function handleAuthFormSubmit(ev) {
             appState.username = existingAccount.username;
             appState.passwordHash = existingAccount.passwordHash;
             appState.transactions = existingAccount.transactions || [];
-            
+
             localStorage.setItem('ewallet_baseBalance', existingAccount.baseBalance);
             localStorage.setItem('ewallet_baseIncome', existingAccount.baseIncome);
         } else {
@@ -93,7 +92,7 @@ async function handleAuthFormSubmit(ev) {
         appState.username = newUsername;
         appState.passwordHash = hashedPassword;
         appState.transactions = [];
-        
+
         localStorage.setItem('ewallet_baseBalance', inputBalance.toString());
         localStorage.setItem('ewallet_baseIncome', inputIncome.toString());
     }
@@ -126,46 +125,46 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (authBtn) {
         authBtn.innerText = appState.isLoggedIn ? 'Logout' : 'Login';
-        
+
         authBtn.addEventListener('click', () => {
             if (appState.isLoggedIn) {
-                appState.isLoggedIn = false; 
-                
+                appState.isLoggedIn = false;
+
                 if (usernameContainer) {
                     usernameContainer.textContent = "(Guest)";
                 }
-                
+
                 const userField = document.getElementById('walletUsername');
                 const passField = document.getElementById('walletPassword');
                 if (userField) userField.value = '';
                 if (passField) passField.value = '';
-                
+
                 appState.syncExpenses();
-                
+
                 if (accountModal) {
                     accountModal.style.display = 'flex';
                 }
             } else if (accountModal) {
-                accountModal.style.display = 'flex'; 
+                accountModal.style.display = 'flex';
             }
         });
     }
-    
+
     if (appState.accountCreated && usernameContainer) {
         usernameContainer.innerHTML = usernameContainer.innerHTML.replace('(Username)', escapeHTML(appState.username));
     }
 
     if (!appState.isLoggedIn && accountModal && profileForm) {
         accountModal.style.display = 'flex';
-        
+
         const modalTitle = document.getElementById('modalTitle');
         const baseBalanceInput = document.getElementById('walletBaseBalance');
         const setupFields = baseBalanceInput ? baseBalanceInput.closest('.form-group').parentNode : null;
-        
+
         if (appState.accountCreated && modalTitle) {
             modalTitle.innerText = "Log In to Your Wallet";
             if (setupFields) {
-                setupFields.style.display = 'none'; 
+                setupFields.style.display = 'none';
             }
         }
 
@@ -194,7 +193,7 @@ document.addEventListener('DOMContentLoaded', () => {
 function initExpensesFeature() {
     const form = document.getElementById('expenseForm');
     const tableBody = document.getElementById('expenseEntriesTableBody');
-    
+
     appState.loadExpenses();
     renderExpenseUI();
 
@@ -203,11 +202,11 @@ function initExpensesFeature() {
         const date = document.getElementById('expensesDate').value;
         const source = document.getElementById('expensesSource').value;
         const amount = parseFloat(document.getElementById('expensesAmount').value) || 0;
-        
-		// expense frequency support
-		const frequency = parseInt(document.getElementById('expensesFrequency').value);
-		
-		const category = document.getElementById('expensesCategory').value;
+
+        // expense frequency support
+        const frequency = parseInt(document.getElementById('expensesFrequency').value);
+
+        const category = document.getElementById('expensesCategory').value;
         const notes = document.getElementById('expensesNotes').value;
         const editId = form.dataset.editId;
 
@@ -228,7 +227,7 @@ function initExpensesFeature() {
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) submitBtn.innerText = 'Add Expense';
         } else {
-            const id = safeUUID(); 
+            const id = safeUUID();
             appState.transactions.push({ id, type: 'expense', date, source, amount, frequency, category, notes });
         }
 
@@ -255,11 +254,11 @@ function initExpensesFeature() {
             document.getElementById('expensesDate').value = target.date;
             document.getElementById('expensesSource').value = target.source;
             document.getElementById('expensesAmount').value = target.amount;
-            
 
-			document.getElementById('expensesFrequency').value = target.frequency || 1;
-			
-			document.getElementById('expensesCategory').value = target.category;
+
+            document.getElementById('expensesFrequency').value = target.frequency || 1;
+
+            document.getElementById('expensesCategory').value = target.category;
             document.getElementById('expensesNotes').value = target.notes;
 
             form.dataset.editId = id;
@@ -301,8 +300,8 @@ function initPlanningFeature() {
     const form = document.getElementById('planningForm');
     const tableBody = document.getElementById('planningEntriesTableBody');
     if (!form || !tableBody) return;
-    
-    appState.loadExpenses(); 
+
+    appState.loadExpenses();
 
     const goalAmountInput = document.getElementById('goalAmount');
     if (goalAmountInput) {
@@ -310,14 +309,138 @@ function initPlanningFeature() {
         if (savedGoal !== null) {
             goalAmountInput.value = savedGoal;
         }
-        
+
         goalAmountInput.addEventListener('input', () => {
             localStorage.setItem('eWallet_planningGoal', goalAmountInput.value);
             renderPlanningUI();
         });
     }
 
-    renderPlanningUI();
+
+    // Currency Converter setup
+
+    const converterSourceOptions =
+        document.querySelectorAll('input[name="converterSource"]');
+
+    const customAmountGroup =
+        document.getElementById('customAmountGroup');
+
+    const plannedPurchaseGroup =
+        document.getElementById('plannedPurchaseGroup');
+
+    const plannedPurchaseSelect =
+        document.getElementById('plannedPurchaseSelect');
+
+    const converterAmount =
+        document.getElementById('converterAmount');
+
+    const toCurrency =
+        document.getElementById('toCurrency');
+
+    const exchangeRate =
+        document.getElementById('exchangeRate');
+
+    const convertCurrencyBtn =
+        document.getElementById('convertCurrencyBtn');
+
+    const convertedAmountDisplay =
+        document.getElementById('convertedAmountDisplay');
+
+    function updatePlannedPurchaseOptions() {
+        if (!plannedPurchaseSelect) return;
+
+        const plans = appState.transactions.filter(
+            transaction => transaction.type === 'plan'
+        );
+
+        plannedPurchaseSelect.innerHTML =
+            '<option value="">Select a planned purchase</option>';
+
+        plans.forEach(plan => {
+            const option = document.createElement('option');
+
+            option.value = plan.id;
+            option.textContent =
+                `${plan.description} - $${(Number(plan.amount) || 0).toFixed(2)}`;
+
+            plannedPurchaseSelect.appendChild(option);
+        });
+
+        if (plans.length === 1) {
+            plannedPurchaseSelect.value = plans[0].id;
+
+            converterAmount.value =
+                (Number(plans[0].amount) || 0).toFixed(2);
+        }
+    }
+
+
+    converterSourceOptions.forEach(option => {
+
+        option.addEventListener('change', () => {
+
+            if (option.value === 'planned' && option.checked) {
+
+                customAmountGroup.style.display = 'none';
+                plannedPurchaseGroup.style.display = 'block';
+
+                updatePlannedPurchaseOptions();
+
+            }
+
+            if (option.value === 'custom' && option.checked) {
+
+                plannedPurchaseGroup.style.display = 'none';
+                customAmountGroup.style.display = 'block';
+
+                plannedPurchaseSelect.value = '';
+                converterAmount.value = '';
+            }
+
+        });
+
+    });
+
+
+    if (plannedPurchaseSelect) {
+        plannedPurchaseSelect.addEventListener('change', () => {
+
+            const selectedPlan = appState.transactions.find(
+                transaction =>
+                    transaction.id === plannedPurchaseSelect.value
+            );
+
+            if (selectedPlan) {
+                converterAmount.value =
+                    Number(selectedPlan.amount).toFixed(2);
+            }
+
+        });
+    }
+
+
+    if (convertCurrencyBtn) {
+        convertCurrencyBtn.addEventListener('click', () => {
+
+            const amount =
+                parseFloat(converterAmount.value) || 0;
+
+            const rate =
+                parseFloat(exchangeRate.value) || 0;
+
+            if (amount <= 0 || rate <= 0) {
+                alert('Please enter a valid amount and exchange rate.');
+                return;
+            }
+
+            const convertedAmount = amount * rate;
+
+            convertedAmountDisplay.textContent =
+                `${toCurrency.value} ${convertedAmount.toFixed(2)}`;
+        });
+    }
+	
+	renderPlanningUI();
 
     form.addEventListener('submit', (ev) => {
         ev.preventDefault();
@@ -338,7 +461,7 @@ function initPlanningFeature() {
         if (editId) {
             const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'plan');
             if (idx !== -1) {
-                 appState.transactions[idx] = { id: editId, type: 'plan', date, description, amount, savedAmount };
+                appState.transactions[idx] = { id: editId, type: 'plan', date, description, amount, savedAmount };
             }
             delete form.dataset.editId;
             const submitBtn = document.getElementById('submitPlanBtn');
@@ -346,7 +469,7 @@ function initPlanningFeature() {
         } else {
             appState.transactions.push({ id: safeUUID(), type: 'plan', date, description, amount, savedAmount });
         }
-        
+
         appState.syncExpenses();
         if (typeof saveAppState === 'function') saveAppState();
         renderPlanningUI();
@@ -375,42 +498,42 @@ function initPlanningFeature() {
             document.getElementById('planningDate').value = target.date || '';
             document.getElementById('planningDescription').value = target.description || '';
             document.getElementById('planningAmount').value = target.amount || 0;
-            
+
             const savedAmountInput = document.getElementById('planningSavedAmount');
             if (savedAmountInput) savedAmountInput.value = target.savedAmount || 0;
-            
+
             form.dataset.editId = id;
             const submitBtn = document.getElementById('submitPlanBtn');
             if (submitBtn) submitBtn.innerText = 'Update Plan';
         }
     });
 
-function renderPlanningUI() {
-    const tableBody = document.getElementById('planningEntriesTableBody');
-    if (!tableBody) return;
+    function renderPlanningUI() {
+        const tableBody = document.getElementById('planningEntriesTableBody');
+        if (!tableBody) return;
 
-    const plans = appState.transactions.filter(t => t.type === 'plan');
-    const now = new Date();
-    const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+        const plans = appState.transactions.filter(t => t.type === 'plan');
+        const now = new Date();
+        const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
 
-    const totalPlanned = plans.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-    const monthPlanned = plans
-        .filter(p => String(p.date).startsWith(currentMonthStr))
-        .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
-    const totalSaved = plans.reduce((sum, p) => sum + (parseFloat(p.savedAmount) || 0), 0);
-    
-    const remainingValue = Math.max(0, totalPlanned - totalSaved);
-	
+        const totalPlanned = plans.reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const monthPlanned = plans
+            .filter(p => String(p.date).startsWith(currentMonthStr))
+            .reduce((sum, p) => sum + (Number(p.amount) || 0), 0);
+        const totalSaved = plans.reduce((sum, p) => sum + (parseFloat(p.savedAmount) || 0), 0);
 
-	const monthlyLeftover = appState.getMonthlyLeftover();
-	const monthsUntilGoal =
-	    monthlyLeftover > 0
-	        ? Math.ceil(remainingValue / monthlyLeftover)
-	        : null;
+        const remainingValue = Math.max(0, totalPlanned - totalSaved);
 
-    tableBody.innerHTML = plans.map(p => {
-        const safeId = escapeHTML(p.id);
-        return `
+
+        const monthlyLeftover = appState.getMonthlyLeftover();
+        const monthsUntilGoal =
+            monthlyLeftover > 0
+                ? Math.ceil(remainingValue / monthlyLeftover)
+                : null;
+
+        tableBody.innerHTML = plans.map(p => {
+            const safeId = escapeHTML(p.id);
+            return `
             <tr data-id="${safeId}">
                 <td>${escapeHTML(p.date)}</td>
                 <td>${escapeHTML(p.description)}</td>
@@ -422,33 +545,35 @@ function renderPlanningUI() {
                 </td>
             </tr>
         `;
-    }).join('');
+        }).join('');
 
-    const updates = {
-        'totalPlanningAmountDisplay': totalPlanned,
-        'monthPlanningAmountDisplay': monthPlanned,
-        'totalSavedAmountDisplay': totalSaved,
-        'remainingTillGoalDisplay': remainingValue
-    };
+        const updates = {
+            'totalPlanningAmountDisplay': totalPlanned,
+            'monthPlanningAmountDisplay': monthPlanned,
+            'totalSavedAmountDisplay': totalSaved,
+            'remainingTillGoalDisplay': remainingValue
+        };
 
-    Object.entries(updates).forEach(([id, val]) => {
-        const el = document.getElementById(id);
-        if (el) el.innerText = `$${val.toFixed(2)}`;
-    });
-	
-	
-	// adding a display 
-	
-	const monthsDisplay = document.getElementById('monthsUntilGoalDisplay');
+        Object.entries(updates).forEach(([id, val]) => {
+            const el = document.getElementById(id);
+            if (el) el.innerText = `$${val.toFixed(2)}`;
+        });
 
-	if (monthsDisplay) {
-	    monthsDisplay.innerText =
-	        monthsUntilGoal === null
-	            ? 'N/A'
-	            : `${monthsUntilGoal} month${monthsUntilGoal === 1 ? '' : 's'}`;
-	}
-	
-}
+
+        // adding a display 
+
+        const monthsDisplay = document.getElementById('monthsUntilGoalDisplay');
+
+        if (monthsDisplay) {
+            monthsDisplay.innerText =
+                monthsUntilGoal === null
+                    ? 'N/A'
+                    : `${monthsUntilGoal} month${monthsUntilGoal === 1 ? '' : 's'}`;
+        }
+
+        updatePlannedPurchaseOptions();
+
+    }
 
 }
 
@@ -456,7 +581,7 @@ function initIncomeFeature() {
     const form = document.getElementById('incomeForm');
     const tableBody = document.getElementById('incomeEntries');
     const submitBtn = document.getElementById('addBtn');
-    
+
     appState.loadExpenses();
     renderIncomeUI();
 
@@ -464,14 +589,14 @@ function initIncomeFeature() {
         ev.preventDefault();
         const date = document.getElementById('incomeDate').value;
         const source = document.getElementById('incomeSource').value;
-		const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
+        const amount = parseFloat(document.getElementById('incomeAmount').value) || 0;
 
-		const frequency =
-		    parseInt(document.getElementById('incomeFrequency').value, 10) || 1;
+        const frequency =
+            parseInt(document.getElementById('incomeFrequency').value, 10) || 1;
 
-		const notes = document.getElementById('incomeNotes').value;
+        const notes = document.getElementById('incomeNotes').value;
 
-		const editId = form.dataset.editId;
+        const editId = form.dataset.editId;
 
         if (editId) {
             const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'income');
@@ -487,7 +612,7 @@ function initIncomeFeature() {
 
         appState.syncExpenses();
         if (typeof saveAppState === 'function') saveAppState();
-        
+
         renderIncomeUI();
         form.reset();
     });
@@ -511,20 +636,20 @@ function initIncomeFeature() {
 
             form.dataset.editId = id;
             if (submitBtn) submitBtn.textContent = 'Update Income';
-            
+
         } else if (actionBtn.classList.contains('deleteBtn') || actionBtn.textContent.trim() === 'Delete') {
             appState.transactions = appState.transactions.filter(t => t.id !== id);
-            
+
             appState.syncExpenses();
             if (typeof saveAppState === 'function') saveAppState();
-            
+
             renderIncomeUI();
         }
     });
 
     function renderIncomeUI() {
         const incomes = appState.transactions.filter(t => t.type === 'income');
-    
+
         tableBody.innerHTML = incomes.map(i => `
             <tr data-id="${i.id}">
                 <td>${escapeHTML(i.date)}</td>
@@ -552,7 +677,7 @@ window.addEventListener('storage', (event) => {
         const isIndexPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || !window.location.pathname.includes('.html');
         const accountModal = document.getElementById('accountCreationModal');
         const usernameContainer = document.querySelector('.username-text') || document.querySelector('h2');
-        
+
         if (appState.isLoggedIn && usernameContainer) {
             usernameContainer.textContent = escapeHTML(appState.username);
             if (accountModal) accountModal.style.display = 'none';
@@ -564,12 +689,12 @@ window.addEventListener('storage', (event) => {
             }
         }
         const hasExpenseView = !!document.getElementById('expenseForm');
-        const hasPlanningView = !!document.getElementById('planningForm'); 
-        
+        const hasPlanningView = !!document.getElementById('planningForm');
+
         if (hasExpenseView && typeof renderExpenseUI === 'function') {
             renderExpenseUI();
         }
-        if (hasPlanningView && typeof renderPlanningUI === 'function') { 
+        if (hasPlanningView && typeof renderPlanningUI === 'function') {
             renderPlanningUI();
         }
     }

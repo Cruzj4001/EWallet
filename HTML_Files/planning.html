@@ -74,68 +74,149 @@
 				</div>
 			-->
 
-			<div class="planning-box" style="border-left: 5px solid #525B76;">
-				<p class="summary-label">Total Savings:</p>
-				<h3 class="money-amount" id="totalSavedAmountDisplay"
-					style="color: #525B76;">$0.00</h3>
-			</div>
+			<div class="planning-summary-grid">
 
-			<div class="planning-box">
-				<p class="summary-label">Total of Planned Purchases:</p>
-				<h3 class="money-amount" id="totalPlanningAmountDisplay">$0.00</h3>
-			</div>
+				<div class="planning-box" style="border-left: 5px solid #525B76;">
+					<p class="summary-label">Total Savings:</p>
+					<h3 class="money-amount" id="totalSavedAmountDisplay"
+						style="color: #525B76;">$0.00</h3>
+				</div>
 
-			<!--  
+				<div class="planning-box">
+					<p class="summary-label">Total of Planned Purchases:</p>
+					<h3 class="money-amount" id="totalPlanningAmountDisplay">$0.00</h3>
+				</div>
+
+				<!--  
 			<div class="planning-box">
 				<p class="summary-label">Added This Month:</p>
 				<h3 class="money-amount" id="monthPlanningAmountDisplay">$0.00</h3>
 			</div>
 			-->
 
-			<div class="planning-box">
-				<p class="summary-label">Remaining Until Goal:</p>
-				<h3 class="money-amount" id="remainingTillGoalDisplay">$0.00</h3>
-			</div>
+				<div class="planning-box">
+					<p class="summary-label">Remaining Until Goal:</p>
+					<h3 class="money-amount" id="remainingTillGoalDisplay">$0.00</h3>
+				</div>
 
-			<div class="planning-box">
-				<p class="summary-label">Estimated Months Until Goal:</p>
-				<h3 class="money-amount" id="monthsUntilGoalDisplay">N/A</h3>
-			</div>
+				<div class="planning-box">
+					<p class="summary-label">Estimated Months Until Goal:</p>
+					<h3 class="money-amount" id="monthsUntilGoalDisplay">N/A</h3>
+				</div>
 
 			</div>
 		</section>
 
-		<!-- Create / Modify Planned Purchases -->
-		<section id="planningFormSection" aria-labelledby="formHeading">
-			<h2 class="title" id="formHeading">Plan Future Purchase</h2>
+		<div class="planning-tools-layout">
 
-			<form id="planningForm">
-				<div class="form-group">
-					<label for="planningDate">Target Date:</label> <input type="date"
-						id="planningDate" name="date" required>
+			<!-- Create / Modify Planned Purchases -->
+			<section id="planningFormSection" aria-labelledby="formHeading">
+				<h2 class="title" id="formHeading">Plan Future Purchase</h2>
+
+
+				<div class="planning-form-box">
+
+					<form id="planningForm">
+						<div class="form-group">
+							<label for="planningDate">Target Date:</label> <input type="date"
+								id="planningDate" name="date" required>
+						</div>
+
+						<div class="form-group">
+							<label for="planningDescription">Description / Item:</label> <input
+								type="text" id="planningDescription" name="description"
+								placeholder="Laptop, Car Insurance, etc." required>
+						</div>
+
+						<div class="form-group">
+							<label for="planningSavedAmount">Amount Saved So Far:</label> <input
+								type="number" id="planningSavedAmount" name="savedAmount"
+								placeholder="0.00" value="0.00" step="0.01" min="0" required>
+						</div>
+
+						<div class="form-group">
+							<label for="planningAmount">Estimated Amount:</label> <input
+								type="number" id="planningAmount" name="amount"
+								placeholder="0.00" step="0.01" min="0" required>
+						</div>
+
+						<button type="submit" id="submitPlanBtn">Create Plan</button>
+					</form>
+				</div>
+			</section>
+
+			<section class="currency-converter-section">
+
+				<h2 class="title">Currency Converter</h2>
+
+				<div class="currency-converter-box">
+
+					<div class="converter-source-options">
+
+						<label> <input type="radio" name="converterSource"
+							value="custom" checked> Custom Amount
+						</label> <label> <input type="radio" name="converterSource"
+							value="planned"> Planned Purchase
+						</label>
+
+					</div>
+
+					<div class="form-group" id="plannedPurchaseGroup"
+						style="display: none;">
+
+						<label for="plannedPurchaseSelect"> Planned Purchase: </label> <select
+							id="plannedPurchaseSelect">
+							<option value="">Select a planned purchase</option>
+						</select>
+
+					</div>
+
+					<div class="form-group" id="customAmountGroup">
+
+						<label for="converterAmount"> Amount in USD: </label> <input
+							type="text" id="converterAmount" placeholder="0.00"
+							inputmode="decimal">
+
+					</div>
+
+					<div class="form-group">
+
+						<label for="toCurrency"> Convert To: </label> <select
+							id="toCurrency">
+							<option value="EUR">Euro (EUR)</option>
+							<option value="GBP">British Pound (GBP)</option>
+							<option value="JPY">Japanese Yen (JPY)</option>
+							<option value="CAD">Canadian Dollar (CAD)</option>
+							<option value="AUD">Australian Dollar (AUD)</option>
+							<option value="MXN">Mexican Peso (MXN)</option>
+							<option value="CNY">Chinese Yuan (CNY)</option>
+						</select>
+
+					</div>
+
+					<div class="form-group">
+
+						<label for="exchangeRate"> Exchange Rate: </label> <input
+							type="text" id="exchangeRate" placeholder="0.00"
+							inputmode="decimal"> <small> Enter the current
+							exchange rate manually. </small>
+
+					</div>
+
+					<button type="button" id="convertCurrencyBtn">Convert</button>
+
+					<div class="conversion-result">
+
+						<p class="summary-label">Converted Amount:</p>
+
+						<h3 class="money-amount" id="convertedAmountDisplay">$0.00</h3>
+
+					</div>
+
 				</div>
 
-				<div class="form-group">
-					<label for="planningDescription">Description / Item:</label> <input
-						type="text" id="planningDescription" name="description"
-						placeholder="Laptop, Car Insurance, etc." required>
-				</div>
-
-				<div class="form-group">
-					<label for="planningSavedAmount">Amount Saved So Far:</label> <input
-						type="number" id="planningSavedAmount" name="savedAmount"
-						placeholder="0.00" value="0.00" step="0.01" min="0" required>
-				</div>
-
-				<div class="form-group">
-					<label for="planningAmount">Estimated Amount:</label> <input
-						type="number" id="planningAmount" name="amount" placeholder="0.00"
-						step="0.01" min="0" required>
-				</div>
-
-				<button type="submit" id="submitPlanBtn">Create Plan</button>
-			</form>
-		</section>
+			</section>
+		</div>
 
 		<!-- View / Modify / Delete Planned Purchases Table -->
 		<section id="planningEntries" aria-labelledby="entriesHeading">
