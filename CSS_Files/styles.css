@@ -11,15 +11,18 @@ html {
 body {
     margin: 0;
     padding: 30px 20px;
-    font-family: "Lucida Console", Monaco, monospace; 
+    font-family: "Lucida Console", Monaco, monospace;
     color: #2B2B2B;
-    border: 10px double #525B76; 
+    border: 10px double #525B76;
     min-height: 100vh;
     position: relative;
-    overflow-x: hidden; 
+    overflow-x: hidden;
 }
 
-/* EWALLET Logo Styling */
+
+/* ==================================================
+   EWALLET LOGO STYLING
+   ================================================== */
 
 .title {
     position: relative;
@@ -45,56 +48,63 @@ body {
 }
 
 .app-logo-link {
-    position: absolute !important; 
+    position: absolute !important;
     left: 28px !important;
     top: 1px !important;
     width: 68px !important;
     height: 68px !important;
-    z-index: 9999 !important;     
+    z-index: 9999 !important;
     display: inline-block !important;
     text-decoration: none !important;
 }
 
 .app-logo-icon {
-    position: absolute !important; 
+    position: absolute !important;
     left: 28px !important;
     top: 1px !important;
     width: 68px !important;
     height: 68px !important;
     z-index: 10000 !important;
-    object-fit: cover !important;   
-    border-radius: 50% !important;  
-    border: 2px solid #525B76 !important; 
-    background-color: #F7F5F0 !important; 
+    object-fit: cover !important;
+    border-radius: 50% !important;
+    border: 2px solid #525B76 !important;
+    background-color: #F7F5F0 !important;
     box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.08) !important;
-    transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), 
-                border-color 0.2s ease, 
-                box-shadow 0.2s ease !important;   
+    transition:
+        transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+        border-color 0.2s ease,
+        box-shadow 0.2s ease !important;
 }
 
 .app-logo-link:hover .app-logo-icon {
-    transform: scale(1.08) !important; 
-    border-color: #434B62 !important;   
-    box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.15) !important; 
+    transform: scale(1.08) !important;
+    border-color: #434B62 !important;
+    box-shadow: 0px 6px 14px rgba(0, 0, 0, 0.15) !important;
 }
 
 .app-logo-link:active .app-logo-icon {
-    transform: scale(0.96) !important; 
+    transform: scale(0.96) !important;
     box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1) !important;
 }
-/* Text Styles */
+
+
+/* ==================================================
+   TEXT STYLES
+   ================================================== */
+
 p {
-    font-size: 16px; 
+    font-size: 16px;
     line-height: 1.6;
     color: #333333;
     margin-top: 0;
     margin-bottom: 16px;
 }
 
-.moneyAmount, .money-amount {
-    font-size: clamp(10px, 1.5vw, 28px); 
+.moneyAmount,
+.money-amount {
+    font-size: clamp(10px, 1.5vw, 28px);
     font-weight: bold;
-    margin: 0; 
+    margin: 0;
     color: #2B2B2B;
 }
 
@@ -102,11 +112,12 @@ p {
     text-align: center;
 }
 
-.listName, .summary-label {
-    color: #525B76; 
+.listName,
+.summary-label {
+    color: #525B76;
     font-size: 18px;
     font-weight: bold;
-    margin: 0; 
+    margin: 0;
 }
 
 .currentGoalText {
@@ -123,7 +134,11 @@ p {
     margin: 20px 0;
 }
 
-/* Button Styles */
+
+/* ==================================================
+   BUTTON STYLES
+   ================================================== */
+
 #optionButtons {
     display: flex;
     flex-wrap: wrap;
@@ -132,10 +147,11 @@ p {
     margin: 24px 0;
 }
 
-button, .btn {
-    background-color: #525B76; 
-    color: #F7F5F0; 
-    padding: 12px 24px; 
+button,
+.btn {
+    background-color: #525B76;
+    color: #F7F5F0;
+    padding: 12px 24px;
     font-family: "Lucida Console", Monaco, monospace;
     font-size: 16px;
     font-weight: bold;
@@ -143,46 +159,119 @@ button, .btn {
     border-radius: 6px;
     cursor: pointer;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-    text-decoration: none; /* Keeps links from having underlines */
+    transition:
+        background-color 0.2s ease,
+        transform 0.1s ease,
+        box-shadow 0.2s ease;
+    text-decoration: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
 }
 
-button:hover, .btn:hover {
-    background-color: #434B62; 
+button:hover,
+.btn:hover {
+    background-color: #434B62;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
-button:active, .btn:active {
+button:active,
+.btn:active {
     transform: translateY(1px);
     box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-/* List Styles */
+
+/* ==================================================
+   LIST STYLES
+   ================================================== */
+
 ul {
-    padding-left: 24px; 
+    padding-left: 24px;
 }
 
-/* Image Styles */
-#pawPrints1, #pawPrints2, #pawPrints3, #pawPrints4, #pawPrints5, #pawPrints6, #pawPrints7 {
-    position: fixed; /* Fixed context prevents absolute layout drift on transaction additions */
-    z-index: -1; 
-    opacity: 0.12; 
+
+/* ==================================================
+   IMAGE STYLES
+   ================================================== */
+
+#pawPrints1,
+#pawPrints2,
+#pawPrints3,
+#pawPrints4,
+#pawPrints5,
+#pawPrints6,
+#pawPrints7 {
+    position: fixed;
+    z-index: -1;
+    opacity: 0.12;
     pointer-events: none;
 }
 
-#pawPrints1 { top: 20%; left: 85%; width: 15vw; max-width: 200px; transform: rotate(-45deg); }
-#pawPrints2 { top: 45%; left: 85%; width: 16vw; max-width: 220px; transform: rotate(20deg); }
-#pawPrints3 { top: 70%; left: 5%;  width: 14vw; max-width: 180px; transform: rotate(97deg); }
-#pawPrints4 { top: 15%; left: 80%; width: 14vw; max-width: 180px; transform: rotate(-70deg); }
-#pawPrints5 { top: 30%; left: 2%;  width: 9vw;  max-width: 110px; transform: rotate(15deg); }
-#pawPrints6 { top: 22%; left: 80%; width: 14vw; max-width: 180px; transform: rotate(-75deg); }
-#pawPrints7 { top: 32%; left: 2%;  width: 10vw; max-width: 130px; transform: rotate(15deg); }
+#pawPrints1 {
+    top: 20%;
+    left: 85%;
+    width: 15vw;
+    max-width: 200px;
+    transform: rotate(-45deg);
+}
+
+#pawPrints2 {
+    top: 45%;
+    left: 85%;
+    width: 16vw;
+    max-width: 220px;
+    transform: rotate(20deg);
+}
+
+#pawPrints3 {
+    top: 70%;
+    left: 5%;
+    width: 14vw;
+    max-width: 180px;
+    transform: rotate(97deg);
+}
+
+#pawPrints4 {
+    top: 15%;
+    left: 80%;
+    width: 14vw;
+    max-width: 180px;
+    transform: rotate(-70deg);
+}
+
+#pawPrints5 {
+    top: 30%;
+    left: 2%;
+    width: 9vw;
+    max-width: 110px;
+    transform: rotate(15deg);
+}
+
+#pawPrints6 {
+    top: 22%;
+    left: 80%;
+    width: 14vw;
+    max-width: 180px;
+    transform: rotate(-75deg);
+}
+
+#pawPrints7 {
+    top: 32%;
+    left: 2%;
+    width: 10vw;
+    max-width: 130px;
+    transform: rotate(15deg);
+}
 
 @media (max-width: 1024px) {
-    #pawPrints1, #pawPrints2, #pawPrints3, #pawPrints4, #pawPrints5, #pawPrints6, #pawPrints7 {
+    #pawPrints1,
+    #pawPrints2,
+    #pawPrints3,
+    #pawPrints4,
+    #pawPrints5,
+    #pawPrints6,
+    #pawPrints7 {
         display: none !important;
     }
 }
@@ -204,20 +293,26 @@ ul {
     margin: 0 auto;
 }
 
-/* Div Styles */
-.incomeSum, .expense-sum, .planning-box {
+
+/* ==================================================
+   SUMMARY BOXES
+   ================================================== */
+
+.incomeSum,
+.expense-sum,
+.planning-box {
     width: 100%;
-    max-width: 500px; 
-    margin: 12px auto; 
+    max-width: 500px;
+    margin: 12px auto;
     padding: 16px 20px;
     display: flex;
     align-items: center;
-    justify-content: space-between; 
+    justify-content: space-between;
     gap: 25px;
-    background-color: rgba(247, 245, 240, 0.9); /* Enhanced opacity for text accessibility readability metrics */
+    background-color: rgba(247, 245, 240, 0.9);
     border-radius: 8px;
-    border-left: 5px solid #7D928B; 
-    box-sizing: border-box; 
+    border-left: 5px solid #7D928B;
+    box-sizing: border-box;
 }
 
 #currentGoal {
@@ -232,14 +327,20 @@ ul {
     padding: 16px;
 }
 
-/* Form Styles */
-form, #expenseForm, #planningForm {
+
+/* ==================================================
+   FORM STYLES
+   ================================================== */
+
+form,
+#expenseForm,
+#planningForm {
     width: 100%;
-    max-width: 500px; 
-    margin: 32px auto; 
+    max-width: 500px;
+    margin: 32px auto;
     display: flex;
-    flex-direction: column; 
-    gap: 16px; 
+    flex-direction: column;
+    gap: 16px;
 }
 
 .form-group {
@@ -254,48 +355,59 @@ label {
     font-weight: bold;
     margin-bottom: 6px;
     color: #2B2B2B;
-    text-transform: uppercase; 
+    text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
-form input, form select, form textarea {
+form input,
+form select,
+form textarea {
     padding: 12px;
     font-family: "Lucida Console", Monaco, monospace;
-    font-size: 16px; /* Native 16px sizing eliminates automatic system layouts browser zooming on iOS Safari profiles */
+    font-size: 16px;
     color: #2B2B2B;
-    border: 2px solid #7D928B; 
+    border: 2px solid #7D928B;
     border-radius: 6px;
     background-color: #F7F5F0;
-    width: 100%; 
+    width: 100%;
     box-sizing: border-box;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease,
+        background-color 0.2s ease;
 }
 
-form input:focus, form select:focus, form textarea:focus {
+form input:focus,
+form select:focus,
+form textarea:focus {
     outline: none;
     background-color: #ffffff;
-    border-color: #525B76; 
+    border-color: #525B76;
     box-shadow: 0 0 0 4px rgba(82, 91, 118, 0.2);
 }
 
-/* Table Styles */
+
+/* ==================================================
+   TABLE STYLES
+   ================================================== */
+
 .table-responsive {
     width: 100%;
-    overflow-x: auto; /* Activates horizontal touch scrolling boundaries securely on small screen devices */
+    overflow-x: auto;
     -webkit-overflow-scrolling: touch;
     margin: 40px auto;
 }
 
 table {
     margin: 0 auto;
-    border-collapse: separate; 
+    border-collapse: separate;
     border-spacing: 0;
     width: 95%;
     max-width: 1000px;
     background-color: #F7F5F0;
     border-radius: 8px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-    overflow: hidden; 
+    overflow: hidden;
 }
 
 th {
@@ -303,7 +415,7 @@ th {
     font-family: "Lucida Console", Monaco, monospace;
     font-size: 16px;
     font-weight: bold;
-    background-color: #525B76; 
+    background-color: #525B76;
     color: #F7F5F0;
     text-align: left;
     text-transform: uppercase;
@@ -315,13 +427,13 @@ td {
     font-family: "Lucida Console", Monaco, monospace;
     font-size: 15px;
     color: #333333;
-    border-bottom: 1px solid rgba(125, 146, 139, 0.25); 
+    border-bottom: 1px solid rgba(125, 146, 139, 0.25);
     overflow-wrap: break-word;
     word-break: break-word;
 }
 
 table tr:last-child td {
-    border-bottom: none; 
+    border-bottom: none;
 }
 
 table td button {
@@ -329,21 +441,25 @@ table td button {
     font-size: 14px;
     margin: 4px 4px 4px 0;
     min-width: 70px;
-    min-height: 38px; /* Safe minimum touch metric target expansion formatting */
+    min-height: 38px;
 }
 
-/* Centralized Onboarding Modal Interface Overlay Layering Rules */
+
+/* ==================================================
+   ACCOUNT MODAL
+   ================================================== */
+
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: rgba(43, 43, 43, 0.7); /* Translucent charcoal layer hides secondary layouts */
+    background-color: rgba(43, 43, 43, 0.7);
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000; /* Stacks mask safely on top of fixed navigational structures */
+    z-index: 10000;
 }
 
 .modal-card {
@@ -355,6 +471,8 @@ table td button {
     max-width: 460px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
 }
+
+
 /* ==================================================
    REPORTS AND DATA TOOLS
    ================================================== */
@@ -440,7 +558,6 @@ table td button {
     font-family: monospace;
 }
 
-/* Makes report controls usable on smaller screens */
 @media (max-width: 800px) {
 
     .report-tools-container,
@@ -461,8 +578,12 @@ table td button {
     .import-row button {
         width: 100%;
     }
-    
-	}
+}
+
+
+/* ==================================================
+   FINANCIAL SUMMARY CARDS
+   ================================================== */
 
 .summary-card-grid {
     display: grid;
@@ -488,34 +609,17 @@ table td button {
 }
 
 @media (max-width: 850px) {
+
     .yearly-summary-grid,
     .monthly-summary-grid {
         grid-template-columns: 1fr;
     }
 }
 
-.summary-chart-section {
-    width: min(1100px, 92%);
-    margin: 0 auto 48px;
-}
 
-.summary-chart-panel {
-    width: 100%;
-    min-height: 420px;
-    padding: 28px;
-    box-sizing: border-box;
-    background-color: #F7F5F0;
-    border-radius: 16px;
-    box-shadow: 0 6px 20px rgba(20, 35, 60, 0.08);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.summary-chart-panel canvas {
-    max-width: 500px;
-    max-height: 500px;
-}
+/* ==================================================
+   FINANCIAL SUMMARY OVERVIEW
+   ================================================== */
 
 .summary-overview-layout {
     display: grid;
@@ -552,24 +656,29 @@ table td button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
+.monthly-summary-grid .incomeSum:last-child {
+    grid-column: 2;
+}
+
 @media (max-width: 1000px) {
+
     .summary-overview-layout {
         grid-template-columns: 1fr;
     }
 }
 
-.monthly-summary-grid .incomeSum:last-child {
-    grid-column: 2;
-}
-
 @media (max-width: 850px) {
+
     .monthly-summary-grid .incomeSum:last-child {
         grid-column: auto;
     }
 }
 
 
-/* Shared header layout: existing logo, title, username, and menu */
+/* ==================================================
+   SHARED HEADER LAYOUT
+   ================================================== */
+
 .intro-top-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
@@ -609,12 +718,11 @@ table td button {
     background-color: rgba(247, 245, 240, 0.72);
     border: 1px solid rgba(82, 91, 118, 0.18);
     border-radius: 8px;
-    
     display: flex;
 }
 
 #intro #optionButtons button {
-	flex: 1;
+    flex: 1;
     padding: 10px 18px;
     min-height: 46px;
 }
@@ -625,6 +733,7 @@ table td button {
 }
 
 @media (max-width: 850px) {
+
     #intro {
         padding-left: 0;
         margin-top: 92px !important;
@@ -639,33 +748,22 @@ table td button {
     }
 }
 
+
+/* ==================================================
+   MR. MONEYBARKS + PIE CHART
+   ================================================== */
+
+.summary-chart-section {
+    width: min(1100px, 92%);
+    margin: 0 auto 48px;
+}
+
 .chart-layout {
     display: grid;
-    grid-template-columns: 1fr 2fr;
+    grid-template-columns: minmax(220px, 1fr) minmax(0, 2fr);
     gap: 30px;
     align-items: center;
-}
-
-.mascot-panel {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    box-shadow: none;
-}
-
-.mascot-image {
     width: 100%;
-    max-width: 300px;
-    max-height: 500px;
-    height: 100%;
-    z-grade: 10000;
-}
-
-.summary-chart-panel {
-    width: 750px;
-    height: 750px;
-    background: none;
-    box-shadow: none;
 }
 
 .mascot-panel {
@@ -676,10 +774,20 @@ table td button {
     gap: 16px;
 }
 
+.mascot-image {
+    display: block;
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    object-fit: contain;
+    position: relative;
+    z-index: 1;
+}
+
 .mascot-message {
     width: 100%;
     max-width: 300px;
-    padding: 15px 15px;
+    padding: 15px;
     background-color: rgba(247, 245, 240, 0.9);
     border-left: 5px solid #7D928B;
     border-radius: 8px;
@@ -693,4 +801,68 @@ table td button {
     font-weight: bold;
     line-height: 1.5;
     text-align: center;
+}
+
+.summary-chart-panel {
+    width: 100%;
+    min-height: 420px;
+    padding: 28px;
+    box-sizing: border-box;
+    background-color: #F7F5F0;
+    border-radius: 16px;
+    box-shadow: 0 6px 20px rgba(20, 35, 60, 0.08);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.summary-chart-panel canvas {
+    width: 100% !important;
+    max-width: 500px;
+    height: auto !important;
+    max-height: 500px;
+}
+
+
+/* ==================================================
+   RESPONSIVE MASCOT / CHART
+   ================================================== */
+
+@media (max-width: 900px) {
+
+    .chart-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .mascot-image {
+        max-width: 220px;
+    }
+
+    .mascot-message {
+        max-width: 420px;
+    }
+
+    .summary-chart-panel {
+        min-height: 360px;
+    }
+}
+
+@media (max-width: 600px) {
+
+    body {
+        padding: 20px 12px;
+    }
+
+    .summary-chart-section {
+        width: 96%;
+    }
+
+    .summary-chart-panel {
+        padding: 15px;
+        min-height: 300px;
+    }
+
+    .mascot-image {
+        max-width: 180px;
+    }
 }

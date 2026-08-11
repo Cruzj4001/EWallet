@@ -171,48 +171,7 @@
         <!-- ========================================= -->
 
         <form id="incomeForm">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link rel="icon" type="image/png" href="../Pictures/appLogo.png">
-
-<link rel="stylesheet" href="../CSS_Files/styles.css">
-
-<title>EWallet Income</title>
-</head>
-
-<body>
-
-	<div id="intro">
-
-		<div class="intro-top-row">
-
-			<a href="index.html" class="app-logo-link"
-				aria-label="Return to Main Page"></a> <img
-				src="../Pictures/appIcon.png" alt="EWallet Logo"
-				class="app-logo-icon">
-
-			<h1 class="title">EWallet Income</h1>
-
-			<h2 class="intro-user">
-				<img src="../Pictures/usernameIcon.png" alt="Username Icon"
-					id="usernameIcon"> <span class="username-text">(Username)</span>
-			</h2>
-
-		</div>
-
-		<div id="optionButtons">
-
-			<button id="mainPageButton"
-				onclick="window.location.href='index.html'">
-				<h2>Main Page</h2>
-			</button>
-
-			<button id="incomeButton"
-				onclick="window.location.href='income.html'">
-				<h2>Income</h2>
-			</button>
 
             <label for="incomeDate">
                 Date:
@@ -329,27 +288,7 @@
         <h1 class="title">
             Income Entries
         </h1>
-			<button id="expenseButton"
-				onclick="window.location.href='expenses.html'">
-				<h2>Expenses</h2>
-			</button>
 
-			<button id="summaryButton"
-				onclick="window.location.href='financialSummary.html'">
-				<h2>Summary</h2>
-			</button>
-
-			<button id="planningButton"
-				onclick="window.location.href='planning.html'">
-				<h2>Planning</h2>
-			</button>
-
-		</div>
-
-	</div>
-
-	<section>
-		<h1 class="title">Income</h1>
 
         <div class="table-responsive">
 
@@ -400,77 +339,6 @@
     type="module"
     src="../income.js">
 </script>
-
-		<img src="../Pictures/PawPrints.png" alt="Paw Prints" id="pawPrints4">
-
-		<img src="../Pictures/PawPrints.png" alt="Paw Prints" id="pawPrints5">
-
-		<div class="incomeSum">
-			<p class="listName">Current Yearly Income:</p>
-			<h3 class="moneyAmount" id="incomeDisplay">$0.00</h3>
-		</div>
-
-		<!-- Inherited income form with frequency added -->
-		<form id="incomeForm" method="post">
-
-			<label for="incomeDate">Date:</label> <input type="date"
-				id="incomeDate" name="date" required> <br>
-			<br> <label for="incomeSource">Source:</label> <input
-				type="text" id="incomeSource" name="source"
-				placeholder="Job, Gift, etc." required> <br>
-			<br> <label for="incomeAmount">Amount:</label> <input
-				type="number" id="incomeAmount" name="amount" placeholder="0.00"
-				step="0.01" required> <br>
-			<br>
-
-			<!-- Added income frequency -->
-			<label for="incomeFrequency">Frequency:</label> <select
-				id="incomeFrequency" name="frequency" required>
-
-				<option value="1">One Time or Yearly</option>
-				<option value="12">Monthly</option>
-				<option value="24">Twice Monthly</option>
-				<option value="26">Biweekly</option>
-				<option value="52">Weekly</option>
-			</select> <br>
-			<br> <label for="incomeNotes">Notes:</label>
-			<textarea id="incomeNotes" name="notes"
-				placeholder="Additional notes"></textarea>
-
-			<br>
-			<br>
-
-			<button type="submit" id="addBtn">Add Income</button>
-
-		</form>
-	</section>
-
-	<section>
-		<h1 class="title">Income Entries</h1>
-
-		<div class="table-responsive">
-			<table id="incomeTable">
-
-				<thead>
-					<tr>
-						<th>Date</th>
-						<th>Source</th>
-						<th>Amount</th>
-						<th>Frequency</th>
-						<th>Notes</th>
-						<th>Actions</th>
-					</tr>
-				</thead>
-
-				<tbody id="incomeEntries">
-					<!-- income.js adds the saved income rows here -->
-				</tbody>
-
-			</table>
-		</div>
-	</section>
-
-	<script type="module" src="../JS_Files/income.js"></script>
 
 </body>
 

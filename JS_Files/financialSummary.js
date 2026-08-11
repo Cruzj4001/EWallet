@@ -1,7 +1,7 @@
 import {
     appState,
     loadAppState
-} from './variables.js';
+} from '../variables.js';
 
 
 /*
@@ -29,9 +29,7 @@ function getCurrentUserID() {
             'ewallet_userID'
         );
 
-
     if (sessionUserID) {
-
         return Number(
             sessionUserID
         );
@@ -43,9 +41,7 @@ function getCurrentUserID() {
             'ewallet_userID'
         );
 
-
     if (localUserID) {
-
         return Number(
             localUserID
         );
@@ -71,7 +67,9 @@ function getUsername() {
 }
 
 
-function formatMoney(value) {
+function formatMoney(
+    value
+) {
 
     return '$' +
         (
@@ -82,7 +80,7 @@ function formatMoney(value) {
 
 /*
  * ==================================================
- * LOAD FINANCIAL DATA FROM DERBY
+ * LOAD DERBY DATA
  * ==================================================
  */
 
@@ -98,10 +96,8 @@ async function loadFinancialData() {
             'Please log in again.'
         );
 
-
         window.location.href =
             '../index.html';
-
 
         return;
     }
@@ -109,6 +105,10 @@ async function loadFinancialData() {
 
     try {
 
+        /*
+         * Load income and expenses
+         * at the same time.
+         */
         const [
             incomeResponse,
             expenseResponse
@@ -127,7 +127,6 @@ async function loadFinancialData() {
                     userID
                 )
             )
-
         ]);
 
 
@@ -183,8 +182,6 @@ async function loadFinancialData() {
 
         renderOrUpdateFinancialChart();
 
-        updateMascotMessage();
-
 
     } catch (error) {
 
@@ -203,7 +200,7 @@ async function loadFinancialData() {
 
 /*
  * ==================================================
- * FINANCIAL CALCULATIONS
+ * CALCULATIONS
  * ==================================================
  */
 
@@ -271,19 +268,13 @@ function getYearlyExpenses() {
 
 function getMonthlyIncome() {
 
-    return (
-        getYearlyIncome() /
-        12
-    );
+    return getYearlyIncome() / 12;
 }
 
 
 function getMonthlyExpenses() {
 
-    return (
-        getYearlyExpenses() /
-        12
-    );
+    return getYearlyExpenses() / 12;
 }
 
 
@@ -306,10 +297,14 @@ function getMonthlyLeftover() {
 
 
 /*
- * Actual income entries dated
- * during the current calendar month.
+ * This calculates what was actually
+ * entered with a date in the current
+ * calendar month.
+ *
+ * It does not multiply recurring income
+ * by frequency here because this field
+ * specifically says "Income This Month."
  */
-
 function getIncomeThisMonth() {
 
     const now =
@@ -348,11 +343,6 @@ function getIncomeThisMonth() {
         );
 }
 
-
-/*
- * Actual expense entries dated
- * during the current calendar month.
- */
 
 function getExpensesThisMonth() {
 
@@ -395,7 +385,7 @@ function getExpensesThisMonth() {
 
 /*
  * ==================================================
- * UPDATE SUMMARY DISPLAY
+ * UPDATE SUMMARY TEXT
  * ==================================================
  */
 
@@ -537,75 +527,6 @@ function updateDashboardMetricsDisplay() {
 
 /*
  * ==================================================
- * MASCOT MESSAGE
- * ==================================================
- */
-
-function updateMascotMessage() {
-
-    const mascotMessage =
-        document.getElementById(
-            'mascotMessage'
-        );
-
-
-    if (!mascotMessage) {
-
-        return;
-    }
-
-
-    const yearlyIncome =
-        getYearlyIncome();
-
-
-    const yearlyExpenses =
-        getYearlyExpenses();
-
-
-    const yearlySavings =
-        getYearlyLeftover();
-
-
-    if (
-        yearlyIncome === 0 &&
-        yearlyExpenses === 0
-    ) {
-
-        mascotMessage.textContent =
-            '"Add some income and expenses so I can analyze your finances!"';
-
-
-    } else if (
-        yearlySavings > 0
-    ) {
-
-        mascotMessage.textContent =
-            '"Nice! You are currently projected to save ' +
-            formatMoney(
-                yearlySavings
-            ) +
-            ' this year."';
-
-
-    } else if (
-        yearlySavings === 0
-    ) {
-
-        mascotMessage.textContent =
-            '"Your yearly income and expenses are currently balanced."';
-
-
-    } else {
-
-        mascotMessage.textContent =
-            '"Your projected yearly expenses are higher than your income. You may want to review your spending."';
-    }
-}
-
-
-/*
- * ==================================================
  * PIE CHART
  * ==================================================
  */
@@ -613,313 +534,127 @@ function updateMascotMessage() {
 function renderOrUpdateFinancialChart() {
 
     const chartCanvas =
-        document.getElementById(
-            'pieChart'
-        );
-
+        document.getElementById('pieChart');
 
     if (!chartCanvas) {
-
-        console.error(
-            'pieChart canvas was not found.'
-        );
-
+        console.error('pieChart canvas was not found.');
         return;
     }
 
-
-    if (
-        typeof Chart ===
-        'undefined'
-    ) {
-
-        console.error(
-            'Chart.js was not loaded.'
-        );
-
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js was not loaded.');
         return;
     }
 
+    /*
+     * These values now come from the
+     * Income and Expense records loaded
+     * from Derby.
+     */
+    const currentIncome =
+        Number(getYearlyIncome()) || 0;
 
-    const yearlyIncome =
+    const currentExpenses =
+        Number(getYearlyExpenses()) || 0;
+
+    const currentSavings =
         Math.max(
             0,
-            Number(
-                getYearlyIncome()
-            ) || 0
+            currentIncome - currentExpenses
         );
 
-
-    const yearlyExpenses =
-        Math.max(
-            0,
-            Number(
-                getYearlyExpenses()
-            ) || 0
-        );
-
-
-    const yearlySavings =
-        Math.max(
-            0,
-            yearlyIncome -
-            yearlyExpenses
-        );
-
-
+    /*
+     * Helpful test so we know exactly
+     * what Chart.js is receiving.
+     */
     console.log(
         'PIE CHART VALUES:',
         {
-            income:
-                yearlyIncome,
-
-            expenses:
-                yearlyExpenses,
-
-            savings:
-                yearlySavings
+            income: currentIncome,
+            expenses: currentExpenses,
+            savings: currentSavings
         }
     );
 
-
     /*
-     * Destroy any Chart.js chart
-     * already connected to this canvas.
+     * Remove any previous chart attached
+     * to this canvas.
      */
-
     const oldChart =
-        Chart.getChart(
-            chartCanvas
-        );
-
+        Chart.getChart(chartCanvas);
 
     if (oldChart) {
-
         oldChart.destroy();
     }
 
-
-    if (pieChartInstance) {
-
-        pieChartInstance =
-            null;
-    }
-
-
     const ctx =
-        chartCanvas.getContext(
-            '2d'
-        );
-
-
-    /*
-     * Expenses + Savings represent
-     * how yearly income is divided.
-     *
-     * We do not include yearly income
-     * itself as another slice because
-     * that would double-count the total.
-     */
-
-    let labels;
-    let values;
-    let colors;
-
-
-    if (
-        yearlyIncome === 0 &&
-        yearlyExpenses === 0
-    ) {
-
-        labels = [
-            'No Financial Data'
-        ];
-
-        values = [
-            1
-        ];
-
-        colors = [
-            '#B0B0B0'
-        ];
-
-
-    } else if (
-        yearlyExpenses >
-        yearlyIncome
-    ) {
-
-        labels = [
-            'Yearly Expenses',
-            'Income Covered'
-        ];
-
-
-        values = [
-            yearlyExpenses -
-                yearlyIncome,
-
-            yearlyIncome
-        ];
-
-
-        colors = [
-            '#F44336',
-            '#4CAF50'
-        ];
-
-
-    } else {
-
-        labels = [
-            'Yearly Expenses',
-            'Yearly Savings'
-        ];
-
-
-        values = [
-            yearlyExpenses,
-            yearlySavings
-        ];
-
-
-        colors = [
-            '#F44336',
-            '#2196F3'
-        ];
-    }
-
+        chartCanvas.getContext('2d');
 
     pieChartInstance =
         new Chart(
             ctx,
             {
-
-                type:
-                    'pie',
-
+                type: 'pie',
 
                 data: {
+                    labels: [
+                        'Yearly Income',
+                        'Yearly Expenses',
+                        'Estimated Yearly Savings'
+                    ],
 
-                    labels:
-                        labels,
+                    datasets: [{
+                        data: [
+                            currentIncome,
+                            currentExpenses,
+                            currentSavings
+                        ],
 
+                        backgroundColor: [
+                            '#4CAF50',
+                            '#F44336',
+                            '#2196F3'
+                        ],
 
-                    datasets: [
-
-                        {
-
-                            data:
-                                values,
-
-
-                            backgroundColor:
-                                colors,
-
-
-                            borderColor:
-                                '#ffffff',
-
-
-                            borderWidth:
-                                2
-                        }
-                    ]
+                        borderColor: '#ffffff',
+                        borderWidth: 2
+                    }]
                 },
 
-
                 options: {
-
-                    responsive:
-                        true,
-
-
-                    maintainAspectRatio:
-                        true,
-
+                    responsive: true,
+                    maintainAspectRatio: true,
 
                     plugins: {
-
                         legend: {
-
-                            position:
-                                'right',
-
+                            position: 'right',
 
                             labels: {
-
                                 font: {
-
-                                    size:
-                                        14
+                                    size: 14
                                 },
 
-
-                                color:
-                                    '#000000',
-
-
-                                padding:
-                                    20
+                                color: '#000000',
+                                padding: 20
                             }
                         },
 
-
                         tooltip: {
-
-                            titleFont: {
-
-                                size:
-                                    14
-                            },
-
-
-                            bodyFont: {
-
-                                size:
-                                    13
-                            },
-
-
                             callbacks: {
+                                label: function(context) {
 
-                                label:
-                                    function(
-                                        context
-                                    ) {
+                                    const value =
+                                        Number(
+                                            context.raw
+                                        ) || 0;
 
-                                        /*
-                                         * Do not display $1.00
-                                         * for the placeholder
-                                         * no-data slice.
-                                         */
-
-                                        if (
-                                            yearlyIncome === 0 &&
-                                            yearlyExpenses === 0
-                                        ) {
-
-                                            return (
-                                                ' No financial data yet'
-                                            );
-                                        }
-
-
-                                        const value =
-                                            Number(
-                                                context.raw
-                                            ) || 0;
-
-
-                                        return (
-                                            ' ' +
-                                            context.label +
-                                            ': $' +
-                                            value.toFixed(
-                                                2
-                                            )
-                                        );
-                                    }
+                                    return (
+                                        ' ' +
+                                        context.label +
+                                        ': $' +
+                                        value.toFixed(2)
+                                    );
+                                }
                             }
                         }
                     }
@@ -927,8 +662,6 @@ function renderOrUpdateFinancialChart() {
             }
         );
 }
-
-
 /*
  * ==================================================
  * REPORT BUTTONS
@@ -973,9 +706,7 @@ async function loadFinancialReport(
 
         const response =
             await fetch(
-                `${endpoint}?userID=${encodeURIComponent(
-                    userID
-                )}`
+                `${endpoint}?userID=${userID}`
             );
 
 
@@ -988,6 +719,7 @@ async function loadFinancialReport(
             reportOutput.textContent =
                 'Could not load report.\n\n' +
                 reportText;
+
 
             return;
         }
@@ -1093,9 +825,7 @@ function downloadCSV(
 
 
     window.location.href =
-        `${endpoint}?userID=${encodeURIComponent(
-            userID
-        )}`;
+        `${endpoint}?userID=${userID}`;
 }
 
 
@@ -1226,14 +956,11 @@ async function importCSV(
 
         const response =
             await fetch(
-                `${endpoint}?userID=${encodeURIComponent(
-                    userID
-                )}`,
+                `${endpoint}?userID=${userID}`,
                 {
 
                     method:
                         'POST',
-
 
                     headers: {
 
@@ -1241,32 +968,14 @@ async function importCSV(
                             'text/csv; charset=UTF-8'
                     },
 
-
                     body:
                         csvText
                 }
             );
 
 
-        let result;
-
-
-        try {
-
-            result =
-                await response.json();
-
-        } catch {
-
-            result = {
-
-                success:
-                    false,
-
-                message:
-                    'The server returned an invalid response.'
-            };
-        }
+        const result =
+            await response.json();
 
 
         if (!response.ok) {
@@ -1292,20 +1001,15 @@ async function importCSV(
         }
 
 
-        const message =
-            result.message ||
-            'CSV import completed.';
-
-
         alert(
-            message
+            result.message
         );
 
 
         if (reportOutput) {
 
             reportOutput.textContent =
-                message;
+                result.message;
         }
 
 
@@ -1314,11 +1018,9 @@ async function importCSV(
 
 
         /*
-         * Reload Derby data so
-         * imported records immediately
-         * appear in the summary.
+         * Reload summary because imported
+         * records were added to Derby.
          */
-
         await loadFinancialData();
 
 
@@ -1343,12 +1045,6 @@ async function importCSV(
     }
 }
 
-
-/*
- * ==================================================
- * IMPORT BUTTONS
- * ==================================================
- */
 
 function initializeImportButtons() {
 
@@ -1418,10 +1114,8 @@ async function initSummaryPage() {
             'Please log in again.'
         );
 
-
         window.location.href =
             '../index.html';
-
 
         return;
     }
@@ -1453,7 +1147,6 @@ if (
         'DOMContentLoaded',
         initSummaryPage
     );
-
 
 } else {
 
