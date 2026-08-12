@@ -1,16 +1,11 @@
 # EWallet
 
-## Contributers
-- Ashley Berna
-    - Scrum Master
-- ⁠Kenneth Trelfa
-    - Software Engineer
-- ⁠Gentil Herve Ishimwe
-    - Software Engineer
-- Jazzmyn Cruz
-    - Software Engineer
-- Lexi Yordy
-    - Software Engineer
+## Setup
+- Import EWalletJava as an existing Eclipse project.
+- The Derby library is included in EWalletJava/lib/derby.jar.
+- Run EWalletServer.
+- Open:
+   http://localhost:8081/HTML_Files/index.html
 
 ## App Functions
 ### Income
@@ -46,3 +41,16 @@
 - Display Estimated Monthly Leftover (savings)
 - Display a Pie Chart for the Breakdown
 - Display Mascot for Theme
+
+
+## Contributers
+- Ashley Berna
+    - Scrum Master
+- ⁠Kenneth Trelfa
+    - Software Engineer
+- ⁠Gentil Herve Ishimwe
+    - Software Engineer
+- Jazzmyn Cruz
+    - Software Engineer
+- Lexi Yordy
+    - Software Engineer
