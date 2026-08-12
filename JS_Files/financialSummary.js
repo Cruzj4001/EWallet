@@ -1,4 +1,5 @@
 import { appState, loadAppState, saveAppState } from './variables.js';
+import { loadTransactionsIntoState } from './derbyBridge.js';
 
 if (typeof appState.loadExpenses === 'function') {
     appState.loadExpenses();
@@ -193,7 +194,13 @@ function renderOrUpdateFinancialChart() {
     }
 }
 
-function initSummaryPageLifecycle() {
+async function initSummaryPageLifecycle() {
+    try {
+        await loadTransactionsIntoState();
+    } catch (error) {
+        console.error('Summary database load error:', error);
+    }
+
     updateDashboardMetricsDisplay();
     renderOrUpdateFinancialChart();
 }

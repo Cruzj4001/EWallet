@@ -1,4 +1,5 @@
 import { appState, loadAppState, saveAppState } from './variables.js';
+import { loadTransactionsIntoState, saveTransactionToDatabase, deleteTransactionFromDatabase } from './derbyBridge.js';
 
 if (typeof loadAppState === 'function') {
     loadAppState();
@@ -93,7 +94,7 @@ function renderIncomeEntriesFromState() {
 }
 
 
-function initIncomePage() {
+async function initIncomePage() {
     if (!appState.isLoggedIn) {
         window.location.href = 'index.html';
         return;
@@ -121,6 +122,13 @@ function initIncomePage() {
         }
     }
 
+    try {
+        await loadTransactionsIntoState();
+    } catch (error) {
+        console.error('Income database load error:', error);
+        alert(error.message || 'Could not load income from Derby.');
+    }
+
     updateIncomeDisplay();
     renderIncomeEntriesFromState();
 
@@ -133,222 +141,87 @@ function initIncomePage() {
     }
 
 
-    incomeEntries.addEventListener('click', event => {
+    incomeEntries.addEventListener('click', async event => {
         const button = event.target.closest('button');
-
         if (!button) return;
-
         const row = button.closest('tr');
-
         if (!row) return;
 
         const id = row.dataset.id || button.dataset.id;
-
+        const target = id
+            ? appState.transactions.find(transaction => transaction.id === id && transaction.type === 'income')
+            : null;
 
         if (button.classList.contains('editBtn')) {
-            const target = id
-                ? appState.transactions.find(
-                    transaction => transaction.id === id
-                )
-                : appState.transactions.find(transaction =>
-                    transaction.type === 'income' &&
-                    transaction.date === row.cells[0].textContent &&
-                    transaction.source === row.cells[1].textContent
-                );
-
             if (!target) return;
-
-            document.getElementById('incomeDate').value =
-                target.date || '';
-
-            document.getElementById('incomeSource').value =
-                target.source || '';
-
-            document.getElementById('incomeAmount').value =
-                target.amount || '';
-
-            // Frequency element
-            document.getElementById('incomeFrequency').value =
-                target.frequency || 1;
-
-            document.getElementById('incomeNotes').value =
-                target.notes || '';
-
+            document.getElementById('incomeDate').value = target.date || '';
+            document.getElementById('incomeSource').value = target.source || '';
+            document.getElementById('incomeAmount').value = target.amount || '';
+            document.getElementById('incomeFrequency').value = target.frequency || 1;
+            document.getElementById('incomeNotes').value = target.notes || '';
             editTransactionId = target.id;
-
             addButton.textContent = 'Update Income';
             editingRow = row;
-
-            // Keep the saved transaction in state while editing.
-            // Only remove the visible row temporarily.
             row.remove();
-
             updateIncomeDisplay();
         }
-
 
         if (button.classList.contains('deleteBtn')) {
-            const dateCell = row.cells[0];
-            const sourceCell = row.cells[1];
-            const amountCell = row.cells[2];
-
-            const amountToRemove =
-                parseFloat(
-                    amountCell.textContent.replace('$', '')
-                ) || 0;
-
-            if (id) {
-                appState.transactions =
-                    appState.transactions.filter(
-                        transaction => transaction.id !== id
-                    );
-            } else {
-                appState.transactions =
-                    appState.transactions.filter(transaction =>
-                        !(
-                            transaction.type === 'income' &&
-                            transaction.date === dateCell.textContent &&
-                            transaction.source === sourceCell.textContent &&
-                            Number(transaction.amount) === amountToRemove
-                        )
-                    );
-            }
-
-            appState.syncExpenses();
-
-            updateIncomeDisplay();
-            renderIncomeEntriesFromState();
-
-            if (editTransactionId === id) {
-                incomeForm.reset();
-
-                editTransactionId = null;
-                editingRow = null;
-
-                addButton.textContent = 'Add Income';
-
-                const frequencyInput =
-                    document.getElementById('incomeFrequency');
-
-                if (frequencyInput) {
-                    frequencyInput.value = '1';
+            if (!target) return;
+            try {
+                await deleteTransactionFromDatabase(target);
+                updateIncomeDisplay();
+                renderIncomeEntriesFromState();
+                if (editTransactionId === id) {
+                    incomeForm.reset();
+                    editTransactionId = null;
+                    editingRow = null;
+                    addButton.textContent = 'Add Income';
                 }
+            } catch (error) {
+                console.error('Income database delete error:', error);
+                alert(error.message || 'Could not delete income.');
             }
         }
-
-        saveAppState();
     });
 
-
-    incomeForm.addEventListener('submit', event => {
+    incomeForm.addEventListener('submit', async event => {
         event.preventDefault();
 
-        const date =
-            document.getElementById('incomeDate').value;
-
-        const source =
-            document.getElementById('incomeSource').value;
-
-        const amount =
-            document.getElementById('incomeAmount').value;
-
-        const notes =
-            document.getElementById('incomeNotes').value;
-
-        // Read frequency
-        const frequency =
-            parseInt(
-                document.getElementById('incomeFrequency').value,
-                10
-            ) || 1;
-
+        const date = document.getElementById('incomeDate').value;
+        const source = document.getElementById('incomeSource').value;
+        const amount = document.getElementById('incomeAmount').value;
+        const notes = document.getElementById('incomeNotes').value;
+        const frequency = parseInt(document.getElementById('incomeFrequency').value) || 1;
 
         if (!date || !source || !amount) {
-            alert(
-                'Please complete date, source, and amount fields.'
-            );
-
+            alert('Please complete date, source, and amount fields.');
             return false;
         }
 
         const amountValue = parseFloat(amount) || 0;
+        const existing = editTransactionId
+            ? appState.transactions.find(t => t.id === editTransactionId && t.type === 'income')
+            : null;
 
-
-        const safeUUID = () => {
-            if (
-                typeof crypto !== 'undefined' &&
-                typeof crypto.randomUUID === 'function'
-            ) {
-                return crypto.randomUUID();
-            }
-
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-                .replace(/[xy]/g, character => {
-                    const randomNumber =
-                        Math.random() * 16 | 0;
-
-                    const value =
-                        character === 'x'
-                            ? randomNumber
-                            : (randomNumber & 0x3 | 0x8);
-
-                    return value.toString(16);
-                });
+        const transaction = {
+            type: 'income', date, source, amount: amountValue, frequency, notes
         };
 
-
-        if (editTransactionId) {
-            const index =
-                appState.transactions.findIndex(
-                    transaction =>
-                        transaction.id === editTransactionId
-                );
-
-            if (index !== -1) {
-                appState.transactions[index] = {
-                    id: editTransactionId,
-                    type: 'income',
-                    date: date,
-                    source: source,
-                    amount: amountValue,
-                    frequency: frequency,
-                    notes: notes
-                };
-            }
-
+        try {
+            await saveTransactionToDatabase(transaction, existing?.dbId || null);
             editTransactionId = null;
-        } else {
-            appState.transactions.push({
-                id: safeUUID(),
-                type: 'income',
-                date: date,
-                source: source,
-                amount: amountValue,
-                frequency: frequency,
-                notes: notes
-            });
+            editingRow = null;
+            addButton.textContent = 'Add Income';
+            incomeForm.reset();
+            const frequencyInput = document.getElementById('incomeFrequency');
+            if (frequencyInput) frequencyInput.value = '1';
+            updateIncomeDisplay();
+            renderIncomeEntriesFromState();
+        } catch (error) {
+            console.error('Income database save error:', error);
+            alert(error.message || 'Could not save income.');
         }
-
-
-        appState.syncExpenses();
-
-        updateIncomeDisplay();
-        renderIncomeEntriesFromState();
-
-        editingRow = null;
-        addButton.textContent = 'Add Income';
-
-        incomeForm.reset();
-
-        const frequencyInput =
-            document.getElementById('incomeFrequency');
-
-        if (frequencyInput) {
-            frequencyInput.value = '1';
-        }
-
-        saveAppState();
-
         return false;
     });
 }

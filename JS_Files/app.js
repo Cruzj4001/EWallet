@@ -1,4 +1,5 @@
 import { appState, loadAppState, saveAppState } from './variables.js';
+import { authenticateOrCreate, loadTransactionsIntoState, saveTransactionToDatabase, deleteTransactionFromDatabase, clearDerbySession } from './derbyBridge.js';
 
 function escapeHTML(str) {
     if (!str) return '';
@@ -47,73 +48,49 @@ async function handleAuthFormSubmit(ev) {
     }
 
     const hashedPassword = await hashPassword(rawPassword);
+    const balanceEl = document.getElementById('walletBaseBalance');
+    const incomeEl = document.getElementById('walletBaseIncome');
+    const inputBalance = balanceEl ? (parseFloat(balanceEl.value) || 500.00) : 500.00;
+    const inputIncome = incomeEl ? (parseFloat(incomeEl.value) || 50.00) : 50.00;
 
-    let accounts = [];
     try {
-        const storedAccounts = localStorage.getItem('ewallet_accounts_db');
-        if (storedAccounts) accounts = JSON.parse(storedAccounts);
-    } catch (e) { console.error("Database read exception:", e); }
+        await authenticateOrCreate(
+            newUsername,
+            hashedPassword,
+            inputBalance,
+            inputIncome
+        );
 
-    const existingAccount = accounts.find(a => a.username.toLowerCase() === newUsername.toLowerCase());
+        await loadTransactionsIntoState();
+        if (typeof saveAppState === 'function') saveAppState();
 
-    if (existingAccount) {
-        if (hashedPassword === existingAccount.passwordHash) {
-            appState.accountCreated = true;
-            appState.isLoggedIn = true;
-            appState.username = existingAccount.username;
-            appState.passwordHash = existingAccount.passwordHash;
-            appState.transactions = existingAccount.transactions || [];
+        const accountModal = document.getElementById('accountCreationModal');
+        if (accountModal) accountModal.style.display = 'none';
 
-            localStorage.setItem('ewallet_baseBalance', existingAccount.baseBalance);
-            localStorage.setItem('ewallet_baseIncome', existingAccount.baseIncome);
-        } else {
-            alert("Invalid account credentials provided.");
-            return;
-        }
-    } else {
-        const balanceEl = document.getElementById('walletBaseBalance');
-        const incomeEl = document.getElementById('walletBaseIncome');
-        const inputBalance = balanceEl ? (parseFloat(balanceEl.value) || 500.00) : 500.00;
-        const inputIncome = incomeEl ? (parseFloat(incomeEl.value) || 50.00) : 50.00;
-
-        const newAccountRecord = {
-            username: newUsername,
-            passwordHash: hashedPassword,
-            baseBalance: inputBalance.toString(),
-            baseIncome: inputIncome.toString(),
-            transactions: []
-        };
-
-        accounts.push(newAccountRecord);
-        localStorage.setItem('ewallet_accounts_db', JSON.stringify(accounts));
-
-        appState.accountCreated = true;
-        appState.isLoggedIn = true;
-        appState.username = newUsername;
-        appState.passwordHash = hashedPassword;
-        appState.transactions = [];
-
-        localStorage.setItem('ewallet_baseBalance', inputBalance.toString());
-        localStorage.setItem('ewallet_baseIncome', inputIncome.toString());
+        window.location.reload();
+    } catch (error) {
+        console.error('Derby authentication error:', error);
+        alert(error.message || 'Could not connect to the EWallet database.');
     }
-
-    appState.syncExpenses();
-    if (typeof saveAppState === 'function') saveAppState();
-
-    const accountModal = document.getElementById('accountCreationModal');
-    if (accountModal) accountModal.style.display = 'none';
-
-    window.location.reload();
 }
 
 
-
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     if (typeof loadAppState === 'function') {
         loadAppState();
     } else {
         appState.loadExpenses();
     }
+
+    if (appState.isLoggedIn) {
+        try {
+            await loadTransactionsIntoState();
+        } catch (error) {
+            console.error('Could not load Derby data:', error);
+            alert('Could not load saved EWallet data from Derby.');
+        }
+    }
+
     const hasExpenseView = !!document.getElementById('expenseForm');
     const hasPlanningView = !!document.getElementById('planningForm');
     const hasIncomeView = !!document.getElementById('incomeForm');
@@ -129,6 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
         authBtn.addEventListener('click', () => {
             if (appState.isLoggedIn) {
                 appState.isLoggedIn = false;
+                clearDerbySession();
 
                 if (usernameContainer) {
                     usernameContainer.textContent = "(Guest)";
@@ -189,10 +167,7 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 
         profileForm.addEventListener('submit', handleAuthFormSubmit);
-        const submitBtn = document.getElementById('createAccountBtn') || profileForm.querySelector('button[type="submit"]');
-        if (submitBtn) {
-            submitBtn.onclick = handleAuthFormSubmit;
-        }
+        // The form submit listener is enough; avoiding a second click handler prevents duplicate database requests.
     } else if (!appState.isLoggedIn) {
         const isIndexPage = window.location.pathname.endsWith('index.html') || window.location.pathname === '/' || !window.location.pathname.includes('.html');
         if (!isIndexPage) {
@@ -217,70 +192,62 @@ function initExpensesFeature() {
     appState.loadExpenses();
     renderExpenseUI();
 
-    form.addEventListener('submit', (ev) => {
+    form.addEventListener('submit', async (ev) => {
         ev.preventDefault();
+
         const date = document.getElementById('expensesDate').value;
         const source = document.getElementById('expensesSource').value;
         const amount = parseFloat(document.getElementById('expensesAmount').value) || 0;
-
-        // expense frequency support
-        const frequency = parseInt(document.getElementById('expensesFrequency').value);
-
+        const frequency = parseInt(document.getElementById('expensesFrequency').value) || 1;
         const category = document.getElementById('expensesCategory').value;
         const notes = document.getElementById('expensesNotes').value;
         const editId = form.dataset.editId;
 
-        const safeUUID = () => {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-                const r = Math.random() * 16 | 0;
-                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-            });
+        const existing = editId
+            ? appState.transactions.find(t => t.id === editId && t.type === 'expense')
+            : null;
+
+        const transaction = {
+            type: 'expense', date, source, amount, frequency, category, notes
         };
 
-        if (editId) {
-            const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'expense');
-            if (idx !== -1) {
-                appState.transactions[idx] = { id: editId, type: 'expense', date, source, amount, frequency, category, notes };
-            }
+        try {
+            await saveTransactionToDatabase(transaction, existing?.dbId || null);
             delete form.dataset.editId;
             const submitBtn = document.getElementById('submitBtn');
             if (submitBtn) submitBtn.innerText = 'Add Expense';
-        } else {
-            const id = safeUUID();
-            appState.transactions.push({ id, type: 'expense', date, source, amount, frequency, category, notes });
+            form.reset();
+            renderExpenseUI();
+        } catch (error) {
+            console.error('Expense database save error:', error);
+            alert(error.message || 'Could not save expense.');
         }
-
-        appState.syncExpenses();
-        renderExpenseUI();
-        form.reset();
     });
 
-    tableBody.addEventListener('click', (ev) => {
+    tableBody.addEventListener('click', async (ev) => {
         const actionBtn = ev.target.closest('button[data-action]');
         if (!actionBtn) return;
 
         const action = actionBtn.dataset.action;
         const id = actionBtn.dataset.id;
+        const target = appState.transactions.find(t => t.id === id && t.type === 'expense');
+        if (!target) return;
 
         if (action === 'delete') {
-            appState.transactions = appState.transactions.filter(t => t.id !== id);
-            appState.syncExpenses();
-            renderExpenseUI();
+            try {
+                await deleteTransactionFromDatabase(target);
+                renderExpenseUI();
+            } catch (error) {
+                console.error('Expense database delete error:', error);
+                alert(error.message || 'Could not delete expense.');
+            }
         } else if (action === 'edit') {
-            const target = appState.transactions.find(t => t.id === id);
-            if (!target) return;
-
             document.getElementById('expensesDate').value = target.date;
             document.getElementById('expensesSource').value = target.source;
             document.getElementById('expensesAmount').value = target.amount;
-
-
             document.getElementById('expensesFrequency').value = target.frequency || 1;
-
             document.getElementById('expensesCategory').value = target.category;
             document.getElementById('expensesNotes').value = target.notes;
-
             form.dataset.editId = id;
             document.getElementById('submitBtn').innerText = 'Update Expense';
         }
@@ -462,7 +429,7 @@ function initPlanningFeature() {
 	
 	renderPlanningUI();
 
-    form.addEventListener('submit', (ev) => {
+    form.addEventListener('submit', async (ev) => {
         ev.preventDefault();
         const date = document.getElementById('planningDate').value;
         const description = document.getElementById('planningDescription').value;
@@ -470,33 +437,28 @@ function initPlanningFeature() {
         const savedAmount = parseFloat(document.getElementById('planningSavedAmount')?.value || 0);
         const editId = form.dataset.editId;
 
-        const safeUUID = () => {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-            return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-                const r = Math.random() * 16 | 0;
-                return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
-            });
+        const existing = editId
+            ? appState.transactions.find(t => t.id === editId && t.type === 'plan')
+            : null;
+
+        const transaction = {
+            type: 'plan', date, description, amount, savedAmount
         };
 
-        if (editId) {
-            const idx = appState.transactions.findIndex(t => t.id === editId && t.type === 'plan');
-            if (idx !== -1) {
-                appState.transactions[idx] = { id: editId, type: 'plan', date, description, amount, savedAmount };
-            }
+        try {
+            await saveTransactionToDatabase(transaction, existing?.dbId || null);
             delete form.dataset.editId;
             const submitBtn = document.getElementById('submitPlanBtn');
             if (submitBtn) submitBtn.innerText = 'Create Plan';
-        } else {
-            appState.transactions.push({ id: safeUUID(), type: 'plan', date, description, amount, savedAmount });
+            form.reset();
+            renderPlanningUI();
+        } catch (error) {
+            console.error('Planning database save error:', error);
+            alert(error.message || 'Could not save planned purchase.');
         }
-
-        appState.syncExpenses();
-        if (typeof saveAppState === 'function') saveAppState();
-        renderPlanningUI();
-        form.reset();
     });
 
-    tableBody.addEventListener('click', (ev) => {
+    tableBody.addEventListener('click', async (ev) => {
         const actionBtn = ev.target.closest('button');
         if (!actionBtn) return;
 
@@ -504,17 +466,22 @@ function initPlanningFeature() {
         const id = row ? row.dataset.id : null;
         if (!id) return;
 
-        const action = actionBtn.dataset.action || (actionBtn.classList.contains('editBtn') ? 'edit' : actionBtn.classList.contains('deleteBtn') ? 'delete' : null);
+        const target = appState.transactions.find(t => t.id === id && t.type === 'plan');
+        if (!target) return;
+
+        const action = actionBtn.dataset.action ||
+            (actionBtn.classList.contains('editBtn') ? 'edit' :
+            actionBtn.classList.contains('deleteBtn') ? 'delete' : null);
 
         if (action === 'delete') {
-            appState.transactions = appState.transactions.filter(t => t.id !== id);
-            appState.syncExpenses();
-            if (typeof saveAppState === 'function') saveAppState();
-            renderPlanningUI();
+            try {
+                await deleteTransactionFromDatabase(target);
+                renderPlanningUI();
+            } catch (error) {
+                console.error('Planning database delete error:', error);
+                alert(error.message || 'Could not delete planned purchase.');
+            }
         } else if (action === 'edit') {
-            const target = appState.transactions.find(t => t.id === id);
-            if (!target) return;
-
             document.getElementById('planningDate').value = target.date || '';
             document.getElementById('planningDescription').value = target.description || '';
             document.getElementById('planningAmount').value = target.amount || 0;
